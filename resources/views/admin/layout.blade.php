@@ -9,11 +9,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Admin') · {{ config('board.brand') }}</title>
+@include('partials.favicon')
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
-<link rel="stylesheet" href="/css/board.css">
+<link rel="stylesheet" href="/css/board.css?v={{ filemtime(public_path('css/board.css')) }}">
 </head>
 <body>
 <div id="nprog"></div>
@@ -59,8 +60,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.all.min.js"></script>
-<script src="/js/ui.js"></script>
-<script src="/js/admin.js"></script>
+<script src="/js/ui.js?v={{ filemtime(public_path('js/ui.js')) }}"></script>
+<script src="/js/admin.js?v={{ filemtime(public_path('js/admin.js')) }}"></script>
 @stack('scripts')
 </body>
 </html>

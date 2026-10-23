@@ -1,8 +1,8 @@
 @php
-  $S = ['todo' => ['To do', '#b8b8c6'], 'ready' => ['Ready', '#7c3aed'], 'done' => ['Done', '#16a765'], 'live' => ['Live', '#0e8a4f']];
+  $S = ['todo' => ['To do', '#cbd0ee'], 'ready' => ['Ready', '#f59e0b'], 'done' => ['Done', '#4f46e5'], 'live' => ['Live', '#10b981']];
   $sec = $cfg['sections'] ?? [];
   $layout = $cfg['layout'];
-  $accent = $color ?: '#7c3aed';
+  $accent = $color ?: '#4f46e5';
   $content = collect($tabs)->filter(fn ($t) => $t['kind'] !== 'strategy' && !($t['meta']['overview'] ?? false));
   $all = $content->flatMap(fn ($t) => $t['items']);
   $count = ['todo' => 0, 'ready' => 0, 'done' => 0, 'live' => 0];
@@ -32,10 +32,10 @@
 <style>
   @page { margin: 34px 38px; }
   * { box-sizing: border-box; }
-  body { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; color: #1c1c28; margin: 0; line-height: 1.45; @if($preview) background:#e9e9f0; @endif }
+  body { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; color: #171a3d; margin: 0; line-height: 1.45; @if($preview) background:#e9e9f0; @endif }
   .paper { @if($preview) max-width: {{ $cfg['orientation'] === 'landscape' ? '1050px' : '800px' }}; margin: 24px auto; background:#fff; padding: 36px 40px; border:1px solid #d9d9e4; @endif }
   h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -.3px; }
-  h2 { font-size: 13px; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1.5px solid {{ $accent }}; color: #1c1c28; }
+  h2 { font-size: 13px; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1.5px solid {{ $accent }}; color: #171a3d; }
   h3 { font-size: 11px; margin: 14px 0 6px; color: {{ $accent }}; }
   .muted { color: #7b7b8c; }
   .small { font-size: 8.5px; }
@@ -101,8 +101,8 @@
     <table class="kpi"><tr>
       <td><span class="tag">Total items</span><b>{{ $total }}</b><span class="muted small">{{ $pct }}% complete</span></td>
       <td><span class="tag">To do</span><b>{{ $count['todo'] }}</b></td>
-      <td><span class="tag">Ready for approval</span><b style="color:#7c3aed">{{ $count['ready'] }}</b></td>
-      <td><span class="tag">Done &amp; live</span><b style="color:#16a765">{{ $fin }}</b><span class="muted small">{{ $count['live'] }} live</span></td>
+      <td><span class="tag">Ready for approval</span><b style="color:#d97706">{{ $count['ready'] }}</b></td>
+      <td><span class="tag">Done &amp; live</span><b style="color:#4f46e5">{{ $fin }}</b><span class="muted small">{{ $count['live'] }} live</span></td>
     </tr></table>
   @endif
 

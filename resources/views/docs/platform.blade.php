@@ -1,6 +1,6 @@
 @php
   $sec = $sections;
-  $S = ['todo' => ['To do', '#b8b8c6'], 'ready' => ['Ready', '#7c3aed'], 'done' => ['Done', '#0a0a0a'], 'live' => ['Live', '#15a05f']];
+  $S = ['todo' => ['To do', '#cbd0ee'], 'ready' => ['Ready', '#f59e0b'], 'done' => ['Done', '#4f46e5'], 'live' => ['Live', '#15a05f']];
   $bar = function ($vals, $total) use ($S) {
       $h = '<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr>';
       foreach ($vals as $k => $v) { if ($v > 0 && $total > 0) { $h .= '<td style="width:'.round($v / $total * 100, 2).'%;background:'.$S[$k][1].';height:9px;font-size:1px;line-height:1px">&nbsp;</td>'; } }
@@ -17,10 +17,10 @@
 <style>
   @page { margin: 34px 38px; }
   * { box-sizing: border-box; }
-  body { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; color: #0a0a0a; margin: 0; line-height: 1.45; @if($preview) background:#ececec; @endif }
+  body { font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; font-size: 10px; color: #171a3d; margin: 0; line-height: 1.45; @if($preview) background:#ececec; @endif }
   .paper { @if($preview) max-width: {{ $orientation === 'landscape' ? '1050px' : '800px' }}; margin: 24px auto; background:#fff; padding: 36px 40px; border:1px solid #d6d6d6; @endif }
   h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -.3px; }
-  h2 { font-size: 13px; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1.5px solid #0a0a0a; }
+  h2 { font-size: 13px; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1.5px solid #4f46e5; }
   h3 { font-size: 11px; margin: 14px 0 6px; }
   .muted { color: #767676; } .small { font-size: 8.5px; }
   .tag { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: #767676; }
@@ -37,7 +37,7 @@
 <body>
 <div class="paper">
   <table style="margin-bottom:6px"><tr>
-    <td style="border:0;padding:0;width:6px;background:#0a0a0a">&nbsp;</td>
+    <td style="border:0;padding:0;width:6px;background:#4f46e5">&nbsp;</td>
     <td style="border:0;padding:0 0 0 12px"><div class="tag">{{ $brand }} · Platform admin</div><h1>{{ $title }}</h1><div class="muted">{{ $date }}@if($type === 'directory' || $type === 'usage') &nbsp;·&nbsp; {{ $filter }}@endif</div></td>
     <td style="border:0;padding:0;text-align:right;width:160px" class="muted small">{{ $header }}</td>
   </tr></table>

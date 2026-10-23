@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'super' => \App\Http\Middleware\SuperOnly::class,
             'staff' => \App\Http\Middleware\AgencyStaff::class,
+            'portal' => \App\Http\Middleware\PortalUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

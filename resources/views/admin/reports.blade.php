@@ -5,7 +5,7 @@
 @php
   use App\Support\Ui;
   $type = request('type', 'summary'); if (!isset($types[$type])) $type = 'summary';
-  $desc = ['summary' => 'KPIs, charts and top agencies', 'directory' => 'Every agency with owner and status', 'usage' => 'Workspaces and team against limits', 'agency' => 'One agency in full detail'];
+  $desc = ['summary' => 'KPIs, charts and top agencies', 'directory' => 'Every agency with owner and status', 'usage' => 'Clients and team against limits', 'agency' => 'One agency in full detail'];
 @endphp
 
 @section('content')

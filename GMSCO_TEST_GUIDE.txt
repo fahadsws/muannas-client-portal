@@ -1,0 +1,119 @@
+GMSCO CLIENT PORTAL: HOW TO CHECK EVERY POINT OF THE BRIEF
+=========================================================
+
+SET UP (wipes the database and loads the GMSCO demo data)
+  php artisan migrate:fresh --seed --seeder=GmscoSeeder
+  php artisan serve --port=8080        then open http://127.0.0.1:8080/login
+  Emails are written to storage/logs/laravel.log (MAIL_MAILER=log). To see them, open that file after each action.
+
+LOGINS (password for every GMSCO login: Gmsco@12345)
+  Platform admin   admin@cadence.test      password Admin@12345   -> goes to /admin (agencies, platform reports)
+  Agency Admin     owner@gmsco.test        Zarnaz Owais, owner of GMSCO, sees everything
+  Manager          manager@gmsco.test      all clients, but no team / roles / settings
+  Team member      sara@gmsco.test         Editor, assigned to Noor Boutique ONLY
+  Team member      omar@gmsco.test         Editor, assigned to Atlas Fitness ONLY
+  Viewer           viewer@gmsco.test       can look and comment, cannot change anything
+  Client           client@noor.test        Noor Boutique (AED)   also hamad@noor.test (second login, same client)
+  Client           client@atlas.test       Atlas Fitness (USD)
+  Client           client@pearl.test       Pearl Dental (GBP)   brand-new client with no content: shows the empty states
+
+THE DEMO DATA
+  Noor Boutique: 12 posts in every status, 3 projects, 6 files, 5 invoices, 3 monthly reports, a board workspace.
+  Atlas Fitness: a lighter version of the same. Pearl Dental: empty.
+
+-----------------------------------------------------------------------------------------------
+1. USERS & ACCESS
+-----------------------------------------------------------------------------------------------
+  [ ] Login with email + password: sign in as each user above.
+  [ ] Forgot password: /login -> "Forgot password?" -> enter client@noor.test. The reset link is in storage/logs/laravel.log.
+  [ ] Admin sees all: owner@gmsco.test -> Clients lists all 3 clients; Team lists all staff.
+  [ ] Team member sees assigned clients only: log in as sara@gmsco.test. Sidebar and Clients show Noor only.
+      Try http://127.0.0.1:8080/portal/c/2 (Atlas) and you get "403 You do not have access".
+  [ ] Client sees own workspace only: log in as client@noor.test. Only Noor's modules appear. /portal/c/2 gives 403.
+      Staff pages (/portal/clients, /team, /portal/admin, /board) are forbidden.
+  [ ] Mobile: open the browser dev tools, pick a phone size (375px). The sidebar becomes a burger menu, tables stack.
+  [ ] Roles: owner -> "Roles & permissions" to see Owner / Manager / Editor / Viewer and change permissions.
+  [ ] Add / remove team members: owner -> Team -> "Add member"; the delete icon removes one.
+
+2. CLIENT DASHBOARD  (log in as client@noor.test)
+  [ ] Welcome with the client's name and logo (top of the page).
+  [ ] Summary counts: pending approvals, approved, in progress, published.
+  [ ] Project list with the status of each (October Content, Brand Identity, Summer Campaign).
+  [ ] Also on the dashboard: needs-your-approval list, upcoming posts, invoices owed, latest report cards, recent activity.
+
+3. CONTENT REVIEW  (Content Review in the sidebar)
+  [ ] Instagram-style grid of posts. Tile badges show carousels and reels, plus the planned date.
+  [ ] Open a post: image or carousel (swipe/arrows), caption, platform, planned date.
+  [ ] Reels: open "Studio tour reel" or "Care guide". The Drive / YouTube / Vimeo link plays or opens inside the portal.
+  [ ] Approve and Request changes buttons: as the client, open a Pending post ("New arrivals, week 1") and press each.
+  [ ] Comment thread: add a comment as the client, then sign in as sara@gmsco.test and reply. Both show in one thread.
+  [ ] Revision counter: "Founder note" is Round 3, "Customer story: Aisha" is Round 2.
+  [ ] Timestamped approvals: open "Weekend offer". The history shows who approved and when.
+  [ ] Team side: sara@gmsco.test -> Content Review -> New post (image upload with preview, platform, date, reel link).
+      Edit a post, change its status, or delete it. Drafts are hidden from clients until sent for review.
+
+4. CONTENT CALENDAR
+  [ ] Monthly calendar of all posts, colour-coded by status (legend on top: Draft, Pending, Changes, Approved, Published).
+  [ ] Use the arrows to move between months. "New post" shows for staff.
+
+5. PROJECTS & TASKS
+  [ ] Projects per client with status, due date and a progress bar.
+  [ ] Task lists with status and due dates (overdue ones are in red).
+  [ ] Staff: "Add project", add tasks, change task status, delete. The client sees progress but cannot edit.
+
+6. FILES & ASSETS
+  [ ] Folders: Brand kit, Logos, Guidelines, Final deliverables, Shared by you.
+  [ ] Download a file. Staff upload into any folder; clients upload into "Shared by you" only.
+  [ ] Upload uses the new file picker: "+ File", drag and drop, chips with name, size and a red X to remove.
+
+7. NOTIFICATIONS  (read storage/logs/laravel.log after each step)
+  [ ] Email to the client when content is ready: as staff, Content Review -> tick drafts -> "Send for review".
+      A "New content ready for your review" email with the button is logged. A green box shows the WhatsApp review link.
+  [ ] Email to the team when the client approves or comments: as the client approve/comment, then look at the log.
+  [ ] Shareable review link: copy the link (/r/<token>). Open it logged out: it asks for login, then lands on that batch.
+      "Share on WhatsApp" opens wa.me with the message.
+
+8. ADMIN PANEL
+  [ ] Add or remove clients: owner -> Clients -> "Add client" (logo, billing currency, billing address, first login, team).
+  [ ] Client logins: edit a client -> add a login, set a new password, remove a login.
+  [ ] Clients list: search, tabs (Needs approval, No login), team filter, date range, sort, table/cards.
+  [ ] Bulk upload: Content Review -> "Bulk upload" (images + optional CSV, template download).
+  [ ] All pending approvals across all clients: "Control Room" in the sidebar.
+  [ ] Add or remove team members: Team page (see section 1).
+  [ ] Client data is strictly separated: repeat the 403 checks from section 1 using different ids.
+
+9. PAYMENTS & INVOICES  (client side: client@noor.test; staff: owner@gmsco.test)
+  [ ] Statuses: GMS-0001 Paid, GMS-0002 Overdue, GMS-0003 Due Soon (within 3 days), GMS-0004 Pending, GMS-0005 Draft (staff only).
+  [ ] Each invoice shows amount, issue date, due date and status (list and detail page).
+  [ ] Client can view and download the PDF; also Print.
+  [ ] Payment history: the "Payment history" box lists paid invoices with method.
+  [ ] Admin creates invoices: Payments & Invoices -> "New invoice": number auto-filled, line items with qty/rate, per-line discount and
+      taxes, overall discount, terms, notes, optional project and own PDF. "Create & email to client" or "Save as draft".
+  [ ] Mark paid (date, method, reference) / Mark unpaid. Paid invoices cannot be edited or deleted until marked unpaid.
+  [ ] Email invoice: on the invoice page, "Email invoice" -> choose recipients, add a message. The PDF is attached (see the log).
+  [ ] Invoice settings (sidebar -> Invoice settings): numbering prefix/digits/next number, business details, column names,
+      terms and notes. Tax tab: add / edit / delete taxes and mark defaults. Client currency is chosen on the client.
+  [ ] Automatic reminders: run  php artisan portal:invoice-reminders
+      You get "Reminder" emails for the Due Soon invoice and "Overdue" emails for the overdue one (see the log).
+      Run it again the same day: nothing new is sent. Overdue ones repeat every 7 days.
+      On a live server add the scheduler:  * * * * * php artisan schedule:run
+
+10. PERFORMANCE REPORTS
+  [ ] Monthly reports archived by month, each with Reach, Engagement, Follower growth and Top post cards.
+  [ ] PDF view / download (Sep and Aug have a PDF; Jul has numbers only).
+  [ ] Summary cards on the dashboard show the latest month with the change from the month before.
+  [ ] Staff add a month: Performance Reports -> "Add report" (numbers entered by hand, optional PDF).
+      Saving a new month emails the client "Your monthly report is ready" (see the log).
+
+11. BRANDING
+  [ ] Agency name and logo at the top of the sidebar (GMSCO). Change it in Settings -> Agency profile (name, colour, logo upload).
+  [ ] Client logos show in the sidebar, on the Clients page and on the client's own dashboard.
+  [ ] Navy-and-cream look: set the brand colour in Settings; buttons and highlights follow it.
+
+12. TECHNICAL REQUIREMENTS
+  [ ] Strict data separation: see section 1 and 8.
+  [ ] Reels by link only: the post form has a link field and no video upload. The Files page says "Videos: share a link".
+  [ ] Platform admin (admin@cadence.test): /admin shows agencies, platform reports and settings. Open GMSCO and use
+      "Impersonate" to see the agency as its owner.
+
+PHASE 2 (intentionally NOT built): Arabic version, WhatsApp notifications, online card payments, automatic Meta/TikTok data.

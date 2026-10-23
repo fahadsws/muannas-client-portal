@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Help guide · {{ config('board.brand') }}</title>
+@include('partials.favicon')
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/board.css">
+<link rel="stylesheet" href="/css/board.css?v={{ filemtime(public_path('css/board.css')) }}">
 <style>:root{--accent:{{ auth()->user()->agency->brand_color ?? '#7c3aed' }}}</style>
 </head>
 <body>

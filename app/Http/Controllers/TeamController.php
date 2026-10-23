@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -32,18 +33,37 @@ class TeamController extends Controller
         $agency = $this->agencyOf($r);
         $q = trim((string) $r->query('q', ''));
         $roleId = $r->query('role');
+        $clientId = (int) $r->query('client');
+        [$sortKey, $dirRaw] = array_pad(explode(':', (string) $r->query('order', 'role:asc')), 2, 'asc');
+        $dir = $dirRaw === 'desc' ? 'desc' : 'asc';
         $per = in_array((int) $r->query('per_page'), [10, 25, 50]) ? (int) $r->query('per_page') : 10;
+        $staff = fn () => User::where('agency_id', $agency->id)->whereIn('role', ['owner', 'member']);
 
-        $members = User::where('agency_id', $agency->id)->whereIn('role', ['owner', 'member'])->with('agencyRole')
+        $query = $staff()->with('agencyRole')->withCount('assignedAccounts')
             ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('name', 'like', "%$q%")->orWhere('email', 'like', "%$q%")))
+            ->when(in_array($r->query('type'), ['owner', 'member']), fn ($x) => $x->where('role', $r->query('type')))
             ->when($roleId === 'owner', fn ($x) => $x->where('role', 'owner'))
             ->when($roleId && $roleId !== 'owner', fn ($x) => $x->where('role_id', (int) $roleId))
-            ->orderByRaw("role = 'owner' desc")->orderBy('name')
-            ->paginate($per)->withQueryString();
+            ->when($clientId, fn ($x) => $x->where(fn ($w) => $w->where('role', 'owner')->orWhereHas('assignedAccounts', fn ($a) => $a->where('accounts.id', $clientId))))
+            ->when($r->filled('from'), fn ($x) => $x->whereDate('created_at', '>=', $r->query('from')))
+            ->when($r->filled('to'), fn ($x) => $x->whereDate('created_at', '<=', $r->query('to')));
+
+        match ($sortKey) {
+            'name' => $query->orderBy('name', $dir),
+            'email' => $query->orderBy('email', $dir),
+            'clients' => $query->orderBy('assigned_accounts_count', $dir),
+            'created' => $query->orderBy('created_at', $dir),
+            default => $query->orderByRaw("role = 'owner' ".($dir === 'asc' ? 'desc' : 'asc'))->orderBy('name'),
+        };
+
+        $staffCount = $staff()->count();
+        $owners = $staff()->where('role', 'owner')->count();
 
         return view('team.index', [
-            'members' => $members, 'roles' => Role::where('agency_id', $agency->id)->orderBy('id')->get(), 'agency' => $agency,
-            'staffCount' => User::where('agency_id', $agency->id)->whereIn('role', ['owner', 'member'])->count(),
+            'members' => $query->paginate($per)->withQueryString(), 'roles' => Role::where('agency_id', $agency->id)->orderBy('id')->get(), 'agency' => $agency,
+            'staffCount' => $staffCount, 'clients' => Account::where('agency_id', $agency->id)->orderBy('name')->get(['id', 'name']),
+            'view' => $r->query('view', 'table') === 'cards' ? 'cards' : 'table',
+            'tabs' => ['all' => $staffCount, 'owner' => $owners, 'member' => $staffCount - $owners],
         ]);
     }
 
