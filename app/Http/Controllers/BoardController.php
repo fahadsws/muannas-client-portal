@@ -23,13 +23,15 @@ class BoardController extends Controller
         if ($u->isSuper()) {
             return redirect('/admin');
         }
-        $accounts = Access::accountsFor($u)->map(fn ($a) => ['id' => $a->id, 'name' => $a->name, 'perm' => $a->perm])->values();
+        $owned = Access::accountsFor($u);
+        $pending = \App\Models\Post::whereIn('account_id', $owned->pluck('id'))->where('status', 'pending')->selectRaw('account_id, count(*) n')->groupBy('account_id')->pluck('n', 'account_id');
+        $accounts = $owned->map(fn ($a) => ['id' => $a->id, 'name' => $a->name, 'perm' => $a->perm, 'logo' => $a->logoUrl(), 'pending' => (int) ($pending[$a->id] ?? 0)])->values();
         $agency = $u->agency;
 
         return view('board', [
             'mode' => 'app', 'token' => null, 'accounts' => $accounts,
-            'me' => ['name' => $u->name, 'email' => $u->email, 'role' => $u->role, 'perms' => $u->permList(), 'role_name' => $u->role === 'owner' ? 'Owner' : ($u->agencyRole?->name ?? 'Guest'), 'impersonating' => (bool) session('impersonator')],
-            'agency' => $agency ? ['id' => $agency->id, 'name' => $agency->name, 'color' => $agency->brand_color] : ['id' => 0, 'name' => $u->name, 'color' => '#7c3aed'],
+            'me' => ['name' => $u->name, 'email' => $u->email, 'role' => $u->role, 'perms' => $u->permList(), 'role_name' => $u->role === 'owner' ? 'Owner' : ($u->agencyRole?->name ?? 'Guest'), 'impersonating' => (bool) session('impersonator'), 'pending' => \App\Models\Post::whereIn('account_id', $accounts->pluck('id'))->where('status', 'pending')->count()],
+            'agency' => $agency ? ['id' => $agency->id, 'name' => $agency->name, 'color' => $agency->brand_color, 'logo' => $agency->logoUrl()] : ['id' => 0, 'name' => $u->name, 'color' => '#7c3aed'],
         ]);
     }
 

@@ -187,7 +187,7 @@ class SuperController extends Controller
             'email' => 'required|email|unique:users,email', 'password' => 'required|string|min:8|max:60',
             'max_workspaces' => 'nullable|integer|min:1|max:1000', 'max_members' => 'nullable|integer|min:1|max:1000',
         ]);
-        $agency = Agency::create(['name' => $v['name'], 'max_workspaces' => $v['max_workspaces'] ?? $defaults['default_max_workspaces'], 'max_members' => $v['max_members'] ?? $defaults['default_max_members']]);
+        $agency = Agency::create(['name' => $v['name'], 'brand_color' => '#4f46e5', 'max_workspaces' => $v['max_workspaces'] ?? $defaults['default_max_workspaces'], 'max_members' => $v['max_members'] ?? $defaults['default_max_members']]);
         User::create(['name' => $v['owner_name'], 'email' => $v['email'], 'password' => $v['password'], 'role' => 'owner', 'agency_id' => $agency->id]);
         foreach (DocTemplate::defaults() as $t) {
             $agency->templates()->create($t);
@@ -272,6 +272,19 @@ class SuperController extends Controller
         if ($group === 'reports') {
             $v['report_header'] = $v['report_header'] ?? '';
             $v['report_footer'] = $v['report_footer'] ?? '';
+        }
+        if ($group === 'platform') {
+            $r->validate(['logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048', 'favicon' => 'nullable|file|mimes:png,ico,jpg,jpeg,webp|max:512']);
+            foreach (['logo', 'favicon'] as $kind) {
+                $old = (string) (Setting::all_()[$kind.'_path'] ?? '');
+                if ($r->hasFile($kind)) {
+                    $old !== '' && \Illuminate\Support\Facades\Storage::disk('local')->delete($old);
+                    $v[$kind.'_path'] = $r->file($kind)->store('platform', 'local');
+                } elseif ($r->boolean('remove_'.$kind)) {
+                    $old !== '' && \Illuminate\Support\Facades\Storage::disk('local')->delete($old);
+                    $v[$kind.'_path'] = '';
+                }
+            }
         }
         Setting::put($v);
 

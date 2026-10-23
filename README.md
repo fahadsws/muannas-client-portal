@@ -1,59 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Muannas Atelier — Client Portal
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 app (PHP 8.2+, MySQL). One place where clients review content, give feedback and approve, replacing WhatsApp approvals. Built on the existing campaign-board system (same login, roles, layout and design).
 
-## About Laravel
+## Who sees what
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Role | How it is set up | Access |
+|---|---|---|
+| **Admin** | Team → role *Owner* (or *Manager*) | Everything, all clients |
+| **Team member** | Team → any other role (e.g. *Editor*) | Only the clients assigned to them (Manage clients → Muannas team), unless the role has "Access every client" |
+| **Client** | Manage clients → client logins | Own workspace only: view, comment, approve. Never sees drafts, other clients, or the internal Campaign board |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Brief checklist (Muannas_Client_Portal_Brief.pdf, module names as in the brief)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| # | Module | Where |
+|---|---|---|
+| 1 | Users & Access | `/login`, `/forgot-password`; roles under Team and Roles & permissions |
+| 2 | Client Dashboard | `/portal/c/{client}` |
+| 3 | Content Review | `/portal/c/{client}/content`, `/portal/posts/{id}`, review link `/r/{token}` |
+| 4 | Content Calendar | `/portal/c/{client}/calendar` |
+| 5 | Projects & Tasks | `/portal/c/{client}/projects` |
+| 6 | Files & Assets | `/portal/c/{client}/files` |
+| 7 | Notifications | Emails + shareable review link (sent from Content Review) |
+| 8 | Admin Panel (named Control Room in the sidebar) | `/portal/admin` (clients and team, bulk upload, all pending approvals) |
+| 9 | Payments & Invoices | `/portal/c/{client}/invoices` |
+| 10 | Performance Reports | `/portal/c/{client}/reports` |
+| 11 | Branding | Agency name and colour in Settings; client logo per client |
+| 12 | Technical Requirements | See Handover below |
+| 13 | Delivery & Support | `php artisan test` (30 tests) |
 
-## Learning Laravel
+Post statuses: Draft → Pending Approval → Changes Requested / Approved → Published. Invoice statuses (Pending, Due Soon = within 3 days, Overdue, Paid) are calculated from the dates.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Install
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install --no-dev --optimize-autoloader
+cp .env.example .env && php artisan key:generate
+# edit .env: APP_URL, DB_*, MAIL_*, QUEUE_CONNECTION, PORTAL_ADMIN_*
+php artisan migrate --force
+php artisan db:seed --force          # platform admin (+ Muannas agency & first admin when PORTAL_ADMIN_EMAIL/PASSWORD are set)
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
 
-## Laravel Sponsors
+Set `APP_ENV=production`, `APP_DEBUG=false`. Point the web root at `public/`. `storage/` and `bootstrap/cache` must be writable. Do **not** run `PortalDemoSeeder` in production.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Required server settings
 
-### Premium Partners
+- **Cron** (invoice reminders, run every minute): `* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1`
+- **Mail**: real SMTP in `.env` (`MAIL_MAILER=smtp`, host, port, username, password, `MAIL_FROM_ADDRESS`). With `MAIL_MAILER=log` nothing is delivered.
+- **Queue**: emails are queued. `QUEUE_CONNECTION=sync` sends instantly (simplest). With `database`, run a worker: `php artisan queue:work --tries=3` under Supervisor.
+- **PHP upload limits** (php.ini): `upload_max_filesize=26M`, `post_max_size=64M`, `max_file_uploads=30`. Bulk upload accepts up to 60 images, but the server only receives `max_file_uploads` per request — upload in batches if you hit it.
+- **HTTPS** on `portal.muannasatelier.com`; set `SESSION_SECURE_COOKIE=true`.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Data & files
 
-## Contributing
+All uploads (post images, files, invoices, reports, logos) live in `storage/app/private`, outside the web root, and are only served through checked routes. Back up that folder and the database together. Reels are links only (YouTube, Google Drive, Frame.io, Vimeo), so storage stays small.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Handover (brief section 12)
 
-## Code of Conduct
+Code, hosting, domain and database must sit under Muannas Atelier accounts: create the server, domain and database in their accounts, deploy this repo from their GitHub, and give them the admin login (`PORTAL_ADMIN_*`). Rotate every password on handover.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Running costs to share before the build is accepted
 
-## Security Vulnerabilities
+No prices are fixed here: confirm current quotes with each provider.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Item | Needed for |
+|---|---|
+| Web hosting / VPS with PHP 8.2, MySQL, cron | Running the portal |
+| Domain `muannasatelier.com` (+ DNS for the `portal` subdomain) | Address |
+| SSL certificate | HTTPS (free with Let's Encrypt) |
+| Transactional email service (or business mailbox SMTP) | All notification emails |
+| Backups (hosting snapshot or storage) | Database + `storage/app/private` |
 
-## License
+## Demo data (local only)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan db:seed --class=PortalDemoSeeder
+```
+Creates `admin@muannas.test`, `team@muannas.test`, `client@noor.test`, `client@atlas.test` (password `Portal@12345`).
+
+## Phase 2 (not built, as per the brief)
+
+Arabic version, WhatsApp notifications, online card payments, automatic performance data from Meta and TikTok.

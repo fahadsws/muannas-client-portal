@@ -37,6 +37,40 @@ class User extends Authenticatable
         return $this->belongsToMany(Account::class)->withPivot('perm');
     }
 
+    /** Clients this team member is assigned to. */
+    public function assignedAccounts()
+    {
+        return $this->belongsToMany(Account::class, 'account_team')->withTimestamps();
+    }
+
+    /** Client login: sees only their own workspace. */
+    public function isClient(): bool
+    {
+        return $this->role === 'guest';
+    }
+
+    /** Owner or team member of an agency. */
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['owner', 'member'], true);
+    }
+
+    /** Every client in the agency, or only the assigned ones. */
+    public function seesAllClients(): bool
+    {
+        return $this->role === 'owner' || $this->hasPerm('clients.all');
+    }
+
+    public function roleLabel(): string
+    {
+        return match ($this->role) {
+            'super' => 'Platform admin',
+            'owner' => 'Admin',
+            'member' => $this->agencyRole?->name ?? 'Team member',
+            default => 'Client',
+        };
+    }
+
     public function agencyRole()
     {
         return $this->belongsTo(Role::class, 'role_id');

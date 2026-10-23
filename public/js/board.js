@@ -43,6 +43,7 @@
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14a6.5 6.5 0 013.5 6"/>',
     cog: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
     dl: '<path d="M12 3v12M7 10l5 5 5-5M4 20h16"/>', copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/>',
+    building: '<path d="M4 21V5a1 1 0 011-1h9a1 1 0 011 1v16M15 9h4a1 1 0 011 1v11M2 21h20M8 8h3M8 12h3M8 16h3"/>', receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>',
     folder: '<path d="M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
   };
   const ic = (n, c = '') => `<svg class="i ${c}" viewBox="0 0 24 24">${P[n]}</svg>`;
@@ -76,10 +77,11 @@
   }
 
   // ── helpers ──────────────────────────────────────────────
-  const GRADS = ['#7c3aed,#c13bd8', '#2563eb,#7c3aed', '#0d9488,#2563eb', '#e11d74,#f97316', '#4f46e5,#06b6d4'];
+  const GRADS = ['#8b8bfa,#3b36d9', '#f59e0b,#ff9b6a', '#4f46e5,#8b8bfa', '#ff9b6a,#f59e0b', '#3b36d9,#14134a'];
   const initials = (n) => String(n).split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const grad = (n) => GRADS[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % GRADS.length];
-  const avatar = (n, cls = '') => `<span class="av ${cls}" style="background:linear-gradient(135deg,${grad(n)})">${esc(initials(n))}</span>`;
+  const avatar = (n, cls = '') => `<span class="av ${cls}" data-t="${[...String(n)].reduce((x, c) => x + c.charCodeAt(0), 0) % 6}">${esc(initials(n))}</span>`;
+  const mark = (n, logo, cls = '') => logo ? `<span class="av img ${cls}"><img src="${esc(logo)}" alt="" onerror="this.parentNode.classList.remove('img');this.replaceWith(document.createTextNode('${esc(initials(n))}'))"></span>` : avatar(n, cls);
   const acct = () => S.accts[S.ai];
   const perm = () => (S.data && S.data.perm) || (acct() && acct().perm) || 'view';
   const canEdit = () => perm() === 'edit';
@@ -104,25 +106,35 @@
   // ── sidebar & top bar ────────────────────────────────────
   function renderSide() {
     if (CLIENT) { $('#side').innerHTML = ''; return; }
-    const shown = S.wsAll ? S.accts : S.accts.slice(0, WS_VISIBLE);
-    const ws = shown.map((a, i) => {
-      const d = S.cache[a.id]; const p = d ? stats(d).pct : null;
-      return `<button class="ws ${S.page === 'board' && i === S.ai ? 'on' : ''}" data-ai="${i}">${avatar(a.name)}<span><b>${esc(a.name)}</b><small>${a.perm === 'edit' ? (d ? stats(d).total + ' items' : 'Workspace') : 'Shared with you'}</small></span><span class="pct">${p === null ? '' : p + '%'}</span></button>`;
+    const mods = (a) => [['image', 'Content Review', 'content'], ['cal', 'Content Calendar', 'calendar'], ['check', 'Projects & Tasks', 'projects'], ['folder', 'Files & Assets', 'files'], ['doc', 'Payments & Invoices', 'invoices'], ['cards', 'Performance Reports', 'reports']]
+      .map((m) => `<a class="nbtn" href="/portal/c/${a.id}/${m[2]}" style="text-decoration:none">${ic(m[0])}${m[1]}${m[2] === 'content' && a.pending ? `<span class="badge">${a.pending}</span>` : ''}</a>`).join('');
+    const ws = S.accts.map((a, i) => {
+      const d = S.cache[a.id]; const p = d ? stats(d).pct : null; const on = S.page === 'board' && i === S.ai; const sel = (S.page === 'board' || S.page === 'docs') && i === S.ai;
+      return `<div class="cl-item" data-name="${esc(a.name.toLowerCase())}" ${sel ? 'data-active="1"' : ''}><button class="ws ${sel ? 'on' : ''}" data-ai="${i}">${mark(a.name, a.logo)}<span><b>${esc(a.name)}</b><small>${a.perm === 'edit' ? (d ? stats(d).total + ' items' : 'Client') : 'Shared with you'}</small></span><span class="pct">${p === null ? '' : p + '%'}</span></button>`
+        + (on && IS_STAFF ? `<div class="subnav"><span class="nbtn on" style="cursor:default">${ic('cards')}Client Dashboard</span>${mods(a)}</div>` : '') + '</div>';
     }).join('');
-    const more = S.accts.length > WS_VISIBLE ? `<button class="wsmore" data-a="wsall">${S.wsAll ? 'Show fewer' : `Show all ${S.accts.length}`}</button>` : '';
     const nn = S.data ? (S.data.notes_total ?? S.data.notes.length) : 0;
-    $('#side').innerHTML = `<div class="agbox">${avatar(AG.name)}<div><b>${esc(AG.name)}</b><small>${esc(B.brand)} workspace</small></div></div>
-      <div class="slabel-row"><div class="slabel">Workspaces</div>${can('workspaces.create') ? `<button class="ibtn" data-a="newws" title="New workspace">${ic('plus')}</button>` : ''}</div>
-      <div class="nav">${ws || '<div style="padding:6px 10px;font-size:12px;color:var(--mute)">No workspaces yet</div>'}${more}</div>
+    $('#side').innerHTML = `<div class="agbox">${mark(AG.name, AG.logo)}<div><b>${esc(AG.name)}</b><small>Agency</small></div></div>
+      <div class="cl" data-cl data-per="10">
+        <div class="cl-head"><a class="slabel" href="/portal/clients" style="text-decoration:none">Clients</a>
+          <div class="cl-tools"><button type="button" class="ibtn" data-cl-search title="Search clients" aria-label="Search clients">${ic('search')}</button>${can('workspaces.create') ? `<a class="ibtn" href="/portal/clients/create" title="Add client">${ic('plus')}</a>` : ''}</div></div>
+        <div class="cl-sbar" hidden><input type="text" placeholder="Search clients" autocomplete="off" aria-label="Search clients"><button type="button" class="ibtn" data-cl-x title="Clear" aria-label="Clear search">${ic('x')}</button></div>
+        <div class="cl-scroll nav">${ws || '<div class="cl-empty">No clients yet</div>'}<div class="cl-empty cl-none" hidden>No client matches</div></div>
+      </div>
+      <div class="side-manage">
       <div class="slabel">Manage</div>
       <div class="nav">
         <button class="nbtn ${S.page === 'board' ? 'on' : ''}" data-page="board">${ic('cards')}Campaign board</button>
-        <button class="nbtn" data-a="notes" ${acct() ? '' : 'disabled'}>${ic('bell')}Team notes ${nn ? `<span class="badge">${nn}</span>` : ''}</button>
-        <a class="nbtn" href="/help" style="text-decoration:none">${ic('doc')}Help guide</a>
+        ${acct() && S.page !== 'settings' ? `<button class="nbtn" data-a="notes">${ic('bell')}Team notes ${nn ? `<span class="badge">${nn}</span>` : ''}</button>` : ''}
         ${can('documents.export') ? `<button class="nbtn ${S.page === 'docs' ? 'on' : ''}" data-page="docs">${ic('doc')}Documents</button>` : ''}
+        ${IS_STAFF ? `<a class="nbtn" href="/portal/clients" style="text-decoration:none">${ic('building')}Clients</a>` : ''}
         ${IS_STAFF ? `<a class="nbtn" href="/team" style="text-decoration:none">${ic('users')}Team</a>` : ''}
-        ${can('roles.manage') ? `<a class="nbtn" href="/roles" style="text-decoration:none">${ic('cog')}Roles & permissions</a>` : ''}
+        ${can('roles.manage') ? `<a class="nbtn" href="/roles" style="text-decoration:none">${ic('lock')}Roles & permissions</a>` : ''}
+        ${can('billing.manage') ? `<a class="nbtn" href="/portal/invoice-settings" style="text-decoration:none">${ic('receipt')}Invoice settings</a>` : ''}
+        ${IS_STAFF ? `<a class="nbtn" href="/portal/admin" style="text-decoration:none">${ic('inbox')}Control Room${ME.pending ? `<span class="badge">${ME.pending}</span>` : ''}</a>` : ''}
         ${can('settings.manage') || can('templates.manage') ? `<button class="nbtn ${S.page === 'settings' ? 'on' : ''}" data-page="settings">${ic('cog')}Settings</button>` : ''}
+        <a class="nbtn" href="/help" style="text-decoration:none">${ic('doc')}Help guide</a>
+      </div>
       </div>
       <div class="sfoot">${avatar(ME.name)}<div class="who"><b>${esc(ME.name)}</b><small>${esc(ME.role_name || (ME.role === 'owner' ? 'Owner' : 'Guest'))}</small></div>
         <form method="post" action="/logout" style="margin:0"><input type="hidden" name="_token" value="${CSRF}"><button class="ibtn" title="Log out">${ic('out')}</button></form></div>
@@ -154,7 +166,7 @@
     if (S.loading === 'all') { $('#head').innerHTML = skHead(); return; }
     const a = acct(); const st = stats(S.data); const docs = S.data.docs || [];
     $('#head').innerHTML = `<div class="hd">
-      <div class="t">${avatar(a.name)}<div><h1>${esc(a.name)}</h1><p>Campaign system board · content calendar &amp; approvals</p></div></div>
+      <div class="t">${mark(a.name, a.logo)}<div><h1>${esc(a.name)}</h1><p>Campaign system board · content calendar &amp; approvals</p></div></div>
       <div class="docs">${CLIENT ? '<span class="pill-live"><i></i>Live progress</span>' : ''}
         ${docs.length || canEdit() ? '<span class="dl">Docs</span>' : ''}
         ${docs.map((d) => `<a class="chipl" href="${esc(d.url)}" target="_blank" rel="noopener">${ic('link' in P ? 'doc' : 'doc')}${esc(d.title)}</a>`).join('')}
@@ -164,7 +176,24 @@
         <div class="kpi"><small><i class="dot todo"></i>To do</small><b data-count="${st.c.todo}">0</b><div class="sub">Waiting to start</div><div class="meter"><i class="m" style="width:${st.total ? (st.c.todo / st.total) * 100 : 0}%"></i></div></div>
         <div class="kpi"><small><i class="dot ready"></i>Ready</small><b data-count="${st.c.ready}">0</b><div class="sub">Ready for approval</div><div class="meter"><i class="p" style="width:${st.total ? (st.c.ready / st.total) * 100 : 0}%"></i></div></div>
         <div class="kpi"><small><i class="dot done"></i>Done &amp; live</small><b data-count="${st.fin}">0</b><div class="sub">${st.c.live} live now</div><div class="meter"><i class="g" style="width:${st.total ? (st.fin / st.total) * 100 : 0}%"></i></div></div></div>`;
+    $('#head').insertAdjacentHTML('beforeend', chartsHtml(st));
     document.querySelectorAll('[data-count]').forEach(countUp);
+  }
+  /** Status mix (stacked bar) and a column chart of items per section, split by status. */
+  function chartsHtml(st) {
+    const secs = S.data.tabs.filter((t) => !(t.meta && t.meta.overview) && t.items.length);
+    if (!st.total || !secs.length) return '';
+    const names = {todo: 'To do', ready: 'Ready', done: 'Done', live: 'Live'};
+    const mix = ['todo', 'ready', 'done', 'live'];
+    const rows = secs.map((t) => { const c = {todo: 0, ready: 0, done: 0, live: 0}; t.items.forEach((i) => c[i.status]++); return {label: t.label, c, n: t.items.length}; });
+    const max = Math.max(...rows.map((r) => r.n));
+    return `<div class="chartrow">
+      <div class="chartcard"><h3>Status mix</h3><small>All items in this workspace</small>
+        <div class="sbar">${mix.map((k) => st.c[k] ? `<i class="s-${k}" style="width:${(st.c[k] / st.total) * 100}%" title="${names[k]}: ${st.c[k]}"></i>` : '').join('')}</div>
+        <div class="sleg">${mix.map((k) => `<span><i class="s-${k}"></i>${names[k]}<b>${st.c[k]}</b></span>`).join('')}</div></div>
+      <div class="chartcard"><h3>Items by section</h3><small>Each column is one section, split by status</small>
+        <div class="cols">${rows.map((r) => `<div class="c" title="${esc(r.label)}: ${r.n} items"><em>${r.n}</em><div class="stk" style="height:${Math.max(6, (r.n / max) * 100)}%">${mix.map((k) => r.c[k] ? `<i class="s-${k}" style="height:${(r.c[k] / r.n) * 100}%"></i>` : '').join('')}</div><span>${esc(r.label)}</span></div>`).join('')}</div></div>
+    </div>`;
   }
   function countUp(el) {
     const to = +el.dataset.count;
@@ -284,7 +313,7 @@
   // ── pages ────────────────────────────────────────────────
   function renderBoardPage() {
     if (!acct()) {
-      $('#content').innerHTML = `<div class="empty" style="margin-top:40px"><div class="eic">${ic('folder')}</div><h3>${can('workspaces.create') ? 'Create your first workspace' : 'Nothing shared with you yet'}</h3><p>${can('workspaces.create') ? 'A workspace is one client or brand. Each has its own strategy, calendar and approvals.' : 'When an agency shares a workspace with you it will appear here.'}</p>${can('workspaces.create') ? `<button class="btn primary" data-a="newws">${ic('plus')}New workspace</button>` : ''}</div>`;
+      $('#content').innerHTML = `<div class="empty" style="margin-top:40px"><div class="eic">${ic('folder')}</div><h3>${can('workspaces.create') ? 'Add your first client' : 'Nothing shared with you yet'}</h3><p>${can('workspaces.create') ? 'Add a client and give them a login. They see their own portal: dashboard, content review, calendar, projects, files, invoices and reports.' : 'When an agency adds you as a client it will appear here.'}</p>${can('workspaces.create') ? `<button class="btn primary" data-a="newws">${ic('plus')}Add client</button>` : ''}</div>`;
       return;
     }
     ensureShell(); renderHead(); renderTabs(); renderTb(); renderView();
@@ -308,6 +337,7 @@
     await wait(320); np.done(); S.loading = null; renderBoardParts();
   }
   async function loadAccount(i) {
+    $('#drawer').classList.remove('on');
     S.ai = i; S.filter = 'all'; S.limit = PAGE; S.kl = {}; S.animate = true; S.loading = 'all'; S.page = 'board';
     try { localStorage.setItem('ws', acct().id); } catch (e) {}
     $('#side').classList.remove('open');
@@ -459,10 +489,11 @@
 
   // ── workspace dialogs ────────────────────────────────────
   function newWorkspace() {
+    location.href = '/portal/clients/create'; return;
     promptBox('New workspace', [{label: 'Workspace / client name', name: 'name', ph: 'e.g. Acme Consulting'}, {type: 'check', label: 'Start with sample content (good for demos)', name: 'sample'}], 'Create workspace', async (o) => {
       if (!o.name.trim()) return;
       const w = await api('POST', 'workspaces', {name: o.name, sample: o.sample});
-      S.accts.push(w); toast('Workspace created'); loadAccount(S.accts.length - 1);
+      S.accts.push(w); toast('Client added'); loadAccount(S.accts.length - 1);
     });
   }
 
@@ -478,9 +509,10 @@
             <div class="row"><div><b>Regenerate link</b><small>The old link will stop working immediately.</small></div><button type="button" class="btn sm" id="regen">Regenerate</button></div>` : '<p class="sub-note">Link sharing is off. Turn it on to give your client a private link.</p>'}
             <div class="mfoot"><a class="btn" href="${esc(url)}" target="_blank" ${sh.enabled ? '' : 'style="display:none"'}>${ic('eye')}Preview client view</a><button type="button" class="btn primary" data-close>Done</button></div></form>`
         : `<form onsubmit="return false">
-            <div class="fld"><label>Invite someone to this workspace</label>
+            <div class="fld"><label>Give ${esc(a.name)} a client login</label>
               <div class="two"><input type="text" id="pn" placeholder="Name"><input type="text" id="pe" placeholder="Email"></div></div>
-            <div class="copyrow"><select id="pp" style="flex:1;border:1px solid var(--border);border-radius:4px;padding:9px 11px;font-size:13px;background:var(--surface)"><option value="comment">Can comment</option><option value="edit">Can edit</option></select><button type="button" class="btn primary" id="padd">Invite</button></div>
+            <p class="sub-note" style="margin:0 0 10px">They sign in at ${esc(location.origin)}/login and get their own portal: Client Dashboard, Content Review, Calendar, Projects, Files, Payments and Reports. They can view, comment and approve. <a href="/portal/c/${a.id}">Open their portal</a></p>
+            <div class="copyrow"><button type="button" class="btn primary" id="padd">Create client login</button></div>
             <div id="pnew"></div>
             <div style="margin-top:6px">${people === null ? '<div class="sk" style="height:46px"></div>' : people.length ? people.map((p) => `<div class="row"><div class="who" style="display:flex;gap:10px;align-items:center">${avatar(p.name)}<div><b>${esc(p.name)}</b><small>${esc(p.email)}</small></div></div><div style="display:flex;gap:8px;align-items:center"><span class="stag ${p.perm === 'edit' ? 'edit' : 'grey'}">${p.perm === 'edit' ? 'Can edit' : 'Can comment'}</span><button type="button" class="ibtn" data-rp="${p.id}" title="Remove">${ic('trash')}</button></div></div>`).join('') : '<p class="sub-note">Nobody has been invited yet.</p>'}</div>
             <div class="mfoot"><button type="button" class="btn primary" data-close>Done</button></div></form>`;
@@ -493,7 +525,7 @@
         const rg = m.querySelector('#regen'); rg && (rg.onclick = () => up({regenerate: true}));
         const pa = m.querySelector('#padd');
         pa && (pa.onclick = async () => {
-          const o = {name: m.querySelector('#pn').value.trim(), email: m.querySelector('#pe').value.trim(), perm: m.querySelector('#pp').value};
+          const o = {name: m.querySelector('#pn').value.trim(), email: m.querySelector('#pe').value.trim(), perm: 'comment'};
           if (!o.name || !o.email) return toast('Enter a name and email', false);
           pa.disabled = true; let r; try { r = await api('POST', `accounts/${a.id}/people`, o); } catch (x) { pa.disabled = false; return; }
           people = (people || []).filter((p) => p.id !== r.id).concat([r]); draw();
@@ -564,13 +596,14 @@
   }
 
   function renderDocs() {
-    if (!acct()) { $('#content').innerHTML = `<div class="empty" style="margin-top:40px"><div class="eic">${ic('doc')}</div><h3>Create a workspace first</h3><p>Documents are generated from a workspace's data.</p>${can('workspaces.create') ? `<button class="btn primary" data-a="newws">${ic('plus')}New workspace</button>` : ''}</div>`; return; }
+    if (!acct()) { $('#content').innerHTML = `<div class="empty" style="margin-top:40px"><div class="eic">${ic('doc')}</div><h3>Create a workspace first</h3><p>Documents are generated from a workspace's data.</p>${can('workspaces.create') ? `<button class="btn primary" data-a="newws">${ic('plus')}Add client</button>` : ''}</div>`; return; }
     const d = S.docs; const ts = S.data ? tabs() : [];
     const hasItems = ts.some((t) => t.items.length);
     if (d.sample === null && !hasItems) d.sample = true;
     $('#content').innerHTML = `<div class="pagehead"><div><h1>Documents</h1><p>Generate reports from <b>${esc(acct().name)}</b>'s live data — as PDF, Word or spreadsheet.</p></div>
       ${can('templates.manage') ? `<button class="btn" data-page="settings" data-sec="templates">${ic('cog')}Manage templates</button>` : ''}</div>
       <div class="docgrid"><div class="sidepanel">
+        <div class="fld"><label>Client</label><select id="dclient">${S.accts.map((a, i) => `<option value="${i}" ${i === S.ai ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
         <div class="fld"><label>Template</label><select id="dtpl">${S.tpls.map((t) => `<option value="${t.id}" ${t.id === d.tid ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>
         <div class="fld"><label>Include sections</label><div class="chk">${ts.map((t) => `<label><input type="checkbox" data-dt="${t.id}" ${!d.tabs || d.tabs.includes(t.id) ? 'checked' : ''}>${esc(t.label)}<span style="margin-left:auto;color:var(--faint);font-size:12px">${t.items.length || ''}</span></label>`).join('')}</div></div>
         <div class="fld"><label>Status</label><select id="dst"><option value="all">All statuses</option>${NEXT_STATUS.map((s) => `<option value="${s}" ${d.status === s ? 'selected' : ''}>${LABEL[s]} only</option>`).join('')}</select></div>
@@ -578,6 +611,16 @@
         ${hasItems ? `<label class="opt"><input type="checkbox" id="dsample" ${d.sample ? 'checked' : ''}> Preview with sample data</label>` : '<p class="sub-note" style="margin:0">This workspace is empty, so sample data is shown.</p>'}
         <div><h3 style="margin-bottom:8px">Export</h3><div class="exp"><button class="btn" data-exp="pdf">${ic('dl')}PDF</button><button class="btn" data-exp="doc">${ic('dl')}Word</button><button class="btn" data-exp="csv">${ic('dl')}CSV</button></div></div>
       </div><div><div class="pbar"><span>Live preview — exactly what you'll export</span></div>${iframeBox(docQS(d), 'dframe')}</div></div>`;
+  }
+  async function switchDocClient(i) {
+    if (i === S.ai) return;
+    $('#drawer').classList.remove('on');
+    S.ai = i; S.docs.tabs = null; S.docs.sample = null;
+    try { localStorage.setItem('ws', acct().id); } catch (e) {}
+    S.data = null; renderSide(); renderBar(); $('#content').innerHTML = skPage();
+    const [d] = await Promise.all([S.cache[acct().id] ? Promise.resolve(S.cache[acct().id]) : api('GET', 'accounts/' + acct().id), wait(250)]);
+    S.data = d; cache(d); S.tab = tabs()[0].id;
+    if (S.page === 'docs') { renderSide(); renderBar(); renderDocs(); }
   }
   let docT = null;
   const docRefresh = () => { clearTimeout(docT); docT = setTimeout(() => refreshFrame('dframe', docQS(S.docs)), 250); };
@@ -618,10 +661,15 @@
   function settingsProfile() {
     $('#setbody').innerHTML = `<div class="card-p"><h3>Agency profile</h3><p>Your name and brand colour appear across the workspace, client links and documents.</p>
       <form id="pf" style="display:grid;gap:16px;max-width:460px"><div class="fld"><label>Agency name</label><input type="text" name="name" value="${esc(AG.name)}" required></div>
+      <div class="fld"><label>Agency logo</label><div class="imgin square ${AG.logo ? 'has' : ''}" data-imgin ${AG.logo ? `data-orig="${esc(AG.logo)}"` : ''}><label class="imgin-drop"><input type="file" accept="image/jpeg,image/png,image/webp"><span class="imgin-prev">${AG.logo ? `<img src="${esc(AG.logo)}" alt="">` : ''}<span class="imgin-ph">${ic('image')}</span></span><span class="imgin-txt"><b>Upload agency logo</b><small>Drag &amp; drop or <u>browse</u> · Square works best · PNG, JPG or WEBP</small></span></label>${AG.logo ? '<input type="hidden" value="0" data-imgin-remove>' : ''}<button type="button" class="imgin-clear" hidden>${ic('x')}<span>Remove</span></button></div></div>
       <div class="fld"><label>Brand colour</label><div class="colorrow"><input type="color" name="brand_color" value="${esc(AG.color)}"><span class="sub-note">Used for buttons, highlights and document headers.</span></div></div>
       <div><button class="btn primary">Save profile</button></div></form></div>`;
     const col = $('#pf [name=brand_color]'); col.oninput = () => document.documentElement.style.setProperty('--accent', col.value);
-    $('#pf').onsubmit = async (e) => { e.preventDefault(); const o = Object.fromEntries(new FormData(e.target)); const r = await api('PATCH', 'agency', o); AG.name = r.name; AG.color = r.color; document.documentElement.style.setProperty('--accent', r.color); renderSide(); renderBar(); toast('Profile saved'); };
+    $('#pf').onsubmit = async (e) => { e.preventDefault(); const o = {name: e.target.name.value, brand_color: e.target.brand_color.value}; const r = await api('PATCH', 'agency', o); AG.name = r.name; AG.color = r.color; document.documentElement.style.setProperty('--accent', r.color);
+      const file = $('#pf input[type=file]').files[0], rmv = $('#pf [data-imgin-remove]');
+      if (file) { const fd = new FormData(); fd.append('logo', file); AG.logo = (await api('POST', 'agency/logo', undefined, fd)).logo; }
+      else if (rmv && rmv.value === '1') { await api('DELETE', 'agency/logo'); AG.logo = null; }
+      renderSide(); renderBar(); settingsProfile(); toast('Profile saved'); };
   }
 
   const SECTION_HELP = {strategy: 'Brand voice, pillars, campaign arc', kpis: 'Totals and completion at a glance', charts: 'Status and platform graphs', tabs: 'A table or cards for each tab', calendar: 'Day-by-day publishing schedule', approval: 'Items waiting for approval, with sign-off'};
@@ -860,6 +908,7 @@
     if (t.matches('textarea.note')) {
       const id = +t.dataset.note; const it = findItem(id); await api('PATCH', 'items/' + id, {data: {notes: t.value}}); it.data.notes = t.value; return toast('Note saved');
     }
+    if (S.page === 'docs' && t.id === 'dclient') return switchDocClient(+t.value);
     if (S.page === 'docs') {
       const d = S.docs;
       if (t.id === 'dtpl') d.tid = +t.value;
@@ -905,6 +954,7 @@
       S.data = d; cache(d); S.tab = saved && tabs().some((t) => t.id === saved) ? saved : tabs()[0].id;
     } else await wait(700);
     S.loading = null; S.animate = true; render();
+    if (qp.get('notes') && acct()) { renderDrawer(); $('#drawer').classList.add('on'); }
     if (wantPage === 'docs' && can('documents.export')) goPage('docs');
     else if (wantPage === 'settings' && (can('settings.manage') || can('templates.manage'))) goPage('settings');
     $('#splash').classList.add('hide'); setTimeout(() => $('#splash').remove(), 600);

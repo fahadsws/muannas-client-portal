@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Agency;
 use App\Models\DocTemplate;
 use App\Models\User;
 use App\Support\Access;
 use App\Support\DemoData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AgencyController extends Controller
@@ -29,6 +31,39 @@ class AgencyController extends Controller
         $u->agency->update($v);
 
         return ['name' => $u->agency->name, 'color' => $u->agency->brand_color];
+    }
+
+    public function uploadLogo(Request $r)
+    {
+        $agency = $this->need($r, 'settings.manage')->agency;
+        $r->validate(['logo' => 'required|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb')]);
+        if ($agency->logo) {
+            Storage::disk('local')->delete($agency->logo);
+        }
+        $agency->update(['logo' => $r->file('logo')->store('agency-logos/'.$agency->id, 'local')]);
+
+        return ['logo' => $agency->logoUrl()];
+    }
+
+    public function removeLogo(Request $r)
+    {
+        $agency = $this->need($r, 'settings.manage')->agency;
+        if ($agency->logo) {
+            Storage::disk('local')->delete($agency->logo);
+            $agency->update(['logo' => null]);
+        }
+
+        return ['logo' => null];
+    }
+
+    /** Streams the agency logo to its own team, its clients and the platform admin. */
+    public function logo(Request $r, Agency $agency)
+    {
+        $u = $r->user();
+        $ok = $u->isSuper() || $u->agency_id === $agency->id || $u->sharedAccounts()->where('accounts.agency_id', $agency->id)->exists();
+        abort_unless($ok && $agency->logo && Storage::disk('local')->exists($agency->logo), 404);
+
+        return Storage::disk('local')->response($agency->logo, null, ['X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, max-age=3600']);
     }
 
     // ── workspaces ───────────────────────────────────────────

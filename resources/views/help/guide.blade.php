@@ -11,7 +11,7 @@
 
 <h2 id="quickstart">2. Quick start (10 minutes)</h2>
 <ol>
-  <li><b>Create a workspace</b> for your first client — click the <b>+</b> next to “Workspaces” in the sidebar. Leave “Start with sample content” off to begin empty.</li>
+  <li><b>Add your first client</b> — open <b>Client portal → Add client</b>. Enter the client name, logo and the contact's name and email. The client gets a login and sees their own portal.</li>
   <li><b>Write the Strategy</b> — open the <i>Strategy</i> tab and press <b>Start the strategy</b> (see section 4).</li>
   <li><b>Plan the content</b> — open a tab (or add a month with the <b>+</b> at the end of the tabs) and press <b>Add row</b>. Click <b>Edit</b> on a card to fill in the caption, platforms and time.</li>
   <li><b>Move work forward</b> — click the status pill on a card (To do → Ready → Done → Live). “Ready” means it is waiting for client approval.</li>
@@ -21,7 +21,7 @@
 
 <h2 id="workspaces">3. Workspaces</h2>
 <ul>
-  <li><b>Create:</b> sidebar → <b>+</b> next to Workspaces. Your plan allows a set number of workspaces; if you reach it you will see a message to contact the platform admin.</li>
+  <li><b>Create:</b> Client portal → <b>Add client</b>. Your plan allows a set number of clients; if you reach it you will see a message to contact the platform admin.</li>
   <li><b>Rename or delete:</b> open the workspace, then the <b>⋯</b> menu in the top bar. Only the agency <b>owner</b> can delete a workspace.</li>
   <li><b>Master docs:</b> use <b>Add link</b> under the workspace title to pin links to the brand guide, shared drive or brief. They appear for the client too.</li>
   <li><b>Search:</b> press <b>Ctrl&nbsp;K</b> (or <b>/</b>) to jump to any tab, workspace or post.</li>
@@ -81,7 +81,7 @@
 <table class="g">
   <tr><th style="width:26%">Method</th><th>How it works</th></tr>
   <tr><td><b>Client link</b></td><td>A private web address. No login. Choose <i>view &amp; comment</i> or <i>view only</i>. You can switch it off or regenerate it (the old link stops working immediately).</td></tr>
-  <tr><td><b>People</b></td><td>Invite someone by name and email. They get their own login and see only this workspace, as either <i>Can comment</i> or <i>Can edit</i>. The temporary password is shown once — send it to them securely.</td></tr>
+  <tr><td><b>People</b></td><td>Invite someone by name and email. They get their own client login and see only their own portal: they can view, comment and approve. The temporary password is shown once — send it to them securely.</td></tr>
 </table>
 <h3>Who can do what</h3>
 <table class="g">

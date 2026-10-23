@@ -14,9 +14,15 @@
   <div>
     @if($sec === 'platform')
       <div class="card-p"><h3>Platform</h3><p>Name shown on the login page, sidebar and documents, plus defaults for new agencies.</p>
-        <form method="post" action="/admin/settings" class="formgrid">@csrf <input type="hidden" name="group" value="platform">
+        <form method="post" action="/admin/settings" class="formgrid" enctype="multipart/form-data">@csrf <input type="hidden" name="group" value="platform">
           <div class="two"><div class="fld"><label>Platform name</label><input type="text" name="brand" value="{{ old('brand', $st['brand']) }}" required></div><div class="fld"><label>Tagline</label><input type="text" name="tagline" value="{{ old('tagline', $st['tagline']) }}" required></div></div>
-          <div class="two"><div class="fld"><label>Default workspace limit</label><input type="text" name="default_max_workspaces" value="{{ old('default_max_workspaces', $st['default_max_workspaces']) }}"></div><div class="fld"><label>Default team limit</label><input type="text" name="default_max_members" value="{{ old('default_max_members', $st['default_max_members']) }}"></div></div>
+          <div class="two"><div class="fld"><label>Default client limit</label><input type="text" name="default_max_workspaces" value="{{ old('default_max_workspaces', $st['default_max_workspaces']) }}"></div><div class="fld"><label>Default team limit</label><input type="text" name="default_max_members" value="{{ old('default_max_members', $st['default_max_members']) }}"></div></div>
+          <div class="two">
+            <div class="fld"><x-file-input name="logo" remove-name="remove_logo" accept="image/png,image/jpeg,image/webp" label="Logo" hint="Square PNG, JPG or WebP, up to 2 MB. Shown on the login page and in the sidebar."
+              :current="$st['logo_path'] ? ['name' => 'Platform logo', 'size' => 'Uploaded', 'url' => '/brand/logo'] : null" /></div>
+            <div class="fld"><x-file-input name="favicon" remove-name="remove_favicon" accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/webp,.ico" label="Favicon" hint="Square PNG or ICO, up to 512 KB. Shown in the browser tab."
+              :current="$st['favicon_path'] ? ['name' => 'Favicon', 'size' => 'Uploaded', 'url' => '/brand/favicon'] : null" /></div>
+          </div>
           <div><button class="btn primary">Save platform settings</button></div></form></div>
     @elseif($sec === 'reports')
       <div class="card-p"><h3>Reports</h3><p>Applied to every platform report you export.</p>

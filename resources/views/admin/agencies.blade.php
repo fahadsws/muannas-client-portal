@@ -8,7 +8,7 @@
   [$sk, $sd] = array_pad(explode(':', $order), 2, 'desc');
   $filtered = $q !== '' || $status !== 'all' || request('from') || request('to') || $usage !== 'any';
   $sorts = ['created:desc' => 'Newest first', 'created:asc' => 'Oldest first', 'name:asc' => 'Name A–Z', 'name:desc' => 'Name Z–A', 'owner:asc' => 'Owner A–Z', 'workspaces:desc' => 'Most workspaces', 'members:desc' => 'Largest team', 'items:desc' => 'Most content', 'status:asc' => 'Status'];
-  $usages = ['any' => 'Any usage', 'limit' => 'At a limit', 'none' => 'No workspaces yet', 'some' => 'Has workspaces'];
+  $usages = ['any' => 'Any usage', 'limit' => 'At a limit', 'none' => 'No clients yet', 'some' => 'Has clients'];
   $th = function ($key, $label) use ($sk, $sd) {
       $on = $sk === $key; $next = $on ? ($sd === 'asc' ? 'desc' : 'asc') : (in_array($key, ['name', 'owner', 'status']) ? 'asc' : 'desc');
       $arrow = $on ? ($sd === 'asc' ? '▲' : '▼') : '↕';
@@ -20,7 +20,7 @@
 @endphp
 
 @section('content')
-<div class="pagehead"><div><h1>Agencies</h1><p>Every agency on the platform. Open one to manage its settings, team and workspaces.</p></div>
+<div class="pagehead"><div><h1>Agencies</h1><p>Every agency on the platform. Open one to manage its settings, team and clients.</p></div>
   <div style="display:flex;gap:8px"><a class="btn" href="/admin/reports">{!! Ui::icon('dl') !!}Export list</a><a class="btn primary" href="/admin/agencies/create">{!! Ui::icon('plus') !!}New agency</a></div></div>
 
 <form method="get" action="/admin/agencies" class="fcard" id="filters">
@@ -56,13 +56,13 @@
     @foreach($rows as $a)
       <a class="agc" href="/admin/agencies/{{ $a['id'] }}"><div class="top">{!! Ui::avatar($a['name']) !!}<div><b>{{ $a['name'] }}</b><small>{{ $a['email'] }}</small></div>
         <span style="margin-left:auto" class="stag {{ $a['status'] === 'active' ? '' : 'off' }}">{{ $a['status'] === 'active' ? 'Active' : 'Suspended' }}</span></div>
-        <div class="stats"><div><b>{{ $a['workspaces'] }}</b><small>Workspaces</small></div><div><b>{{ $a['members'] }}</b><small>Team</small></div><div><b>{{ $a['items'] }}</b><small>Items</small></div></div>
+        <div class="stats"><div><b>{{ $a['workspaces'] }}</b><small>Clients</small></div><div><b>{{ $a['members'] }}</b><small>Team</small></div><div><b>{{ $a['items'] }}</b><small>Items</small></div></div>
         <div class="foot"><span>{{ $a['pct'] }}% complete</span><span>Since {{ $a['created'] }}</span></div></a>
     @endforeach
   </div>
 @else
   <table class="tbl">
-    <thead><tr>{!! $th('name', 'Agency') !!}{!! $th('owner', 'Owner') !!}{!! $th('workspaces', 'Workspaces') !!}{!! $th('members', 'Team') !!}{!! $th('items', 'Items') !!}{!! $th('status', 'Status') !!}{!! $th('created', 'Created') !!}<th style="text-align:right">Actions</th></tr></thead>
+    <thead><tr>{!! $th('name', 'Agency') !!}{!! $th('owner', 'Owner') !!}{!! $th('workspaces', 'Clients') !!}{!! $th('members', 'Team') !!}{!! $th('items', 'Items') !!}{!! $th('status', 'Status') !!}{!! $th('created', 'Created') !!}<th style="text-align:right">Actions</th></tr></thead>
     <tbody>
       @foreach($rows as $a)
         @php $active = $a['status'] === 'active'; @endphp

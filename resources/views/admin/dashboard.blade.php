@@ -6,7 +6,7 @@
   use App\Support\Ui;
   $t = $d['totals']; $st = $d['status']; $tot = array_sum($st);
   $mx = max(1, collect($d['months'])->max('n'));
-  $col = ['todo' => '#d4d4d4', 'ready' => '#7c3aed', 'done' => '#0a0a0a', 'live' => '#15a05f'];
+  $col = ['todo' => '#cbd0ee', 'ready' => '#f59e0b', 'done' => '#4f46e5', 'live' => '#10b981'];
   $label = ['todo' => 'To do', 'ready' => 'Ready', 'done' => 'Done', 'live' => 'Live'];
   $C = 2 * M_PI * 52; $off = 0;
 @endphp
@@ -19,7 +19,7 @@
   <a class="kpi click" href="/admin/agencies"><small>Agencies</small><b>{{ $t['agencies'] }}</b>
     <div class="sub"><span class="lnk" data-href="/admin/agencies?status=active">{{ $t['active'] }} active</span> · <span class="lnk" data-href="/admin/agencies?status=suspended">{{ $t['suspended'] }} suspended</span></div>
     <div class="meter"><i style="width:{{ $t['agencies'] ? ($t['active'] / $t['agencies']) * 100 : 0 }}%"></i></div></a>
-  <a class="kpi click" href="/admin/agencies?order=workspaces:desc"><small>Workspaces</small><b>{{ $t['workspaces'] }}</b><div class="sub">across all agencies · most first</div><div class="meter"><i style="width:100%"></i></div></a>
+  <a class="kpi click" href="/admin/agencies?order=workspaces:desc"><small>Clients</small><b>{{ $t['workspaces'] }}</b><div class="sub">across all agencies · most first</div><div class="meter"><i style="width:100%"></i></div></a>
   <a class="kpi click" href="/admin/agencies?order=members:desc"><small>People</small><b>{{ $t['users'] }}</b><div class="sub">{{ $t['guests'] }} guest{{ $t['guests'] == 1 ? '' : 's' }} with shared access</div><div class="meter"><i style="width:100%"></i></div></a>
   <a class="kpi click" href="/admin/agencies?order=items:desc"><small>Content items</small><b>{{ $t['items'] }}</b><div class="sub">{{ $t['completion'] }}% complete · most first</div><div class="meter"><i class="g" style="width:{{ $t['completion'] }}%"></i></div></a>
 </div>

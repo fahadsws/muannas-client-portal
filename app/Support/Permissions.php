@@ -6,16 +6,23 @@ namespace App\Support;
 class Permissions
 {
     public const GROUPS = [
-        'Workspaces' => [
-            'workspaces.create' => ['Create workspaces', 'Add a new client workspace.'],
-            'workspaces.edit' => ['Rename workspaces', 'Change a workspace name.'],
-            'workspaces.delete' => ['Delete workspaces', 'Permanently remove a workspace and its content.'],
+        'Client management' => [
+            'workspaces.create' => ['Add clients', 'Add a new client, with a login for them.'],
+            'workspaces.edit' => ['Edit clients', 'Change a client name, logo and assigned team.'],
+            'workspaces.delete' => ['Delete clients', 'Permanently remove a client and everything in their portal.'],
+        ],
+        'Clients' => [
+            'clients.all' => ['Access every client', 'See all clients. Without this, a team member only sees the clients assigned to them.'],
+        ],
+        'Billing & reports' => [
+            'billing.manage' => ['Manage invoices', 'Upload invoices, mark them paid and see payment history.'],
+            'reports.manage' => ['Manage performance reports', 'Enter monthly numbers and upload report PDFs.'],
         ],
         'Content' => [
             'content.edit' => ['Edit content & strategy', 'Add, edit and delete posts, tabs and the strategy; upload images; change status.'],
         ],
         'Sharing' => [
-            'sharing.manage' => ['Share workspaces', 'Manage the client link and invite people to a workspace.'],
+            'sharing.manage' => ['Manage client logins', 'Create and reset the logins clients use to sign in.'],
         ],
         'Documents' => [
             'documents.export' => ['Generate documents', 'Create and download PDF, Word and CSV reports.'],
@@ -51,8 +58,8 @@ class Permissions
 
         return [
             ['name' => 'Owner', 'description' => 'Full control of the agency. Cannot be changed.', 'permissions' => $all, 'is_system' => true],
-            ['name' => 'Manager', 'description' => 'Runs every workspace day to day, but not team, roles or agency settings.', 'permissions' => array_values(array_diff($all, ['workspaces.delete', 'team.manage', 'roles.manage', 'settings.manage'])), 'is_system' => true],
-            ['name' => 'Editor', 'description' => 'Creates and edits content and downloads documents.', 'permissions' => ['content.edit', 'documents.export'], 'is_system' => true],
+            ['name' => 'Manager', 'description' => 'Runs every client day to day, but not team, roles or agency settings.', 'permissions' => array_values(array_diff($all, ['workspaces.delete', 'team.manage', 'roles.manage', 'settings.manage'])), 'is_system' => true],
+            ['name' => 'Editor', 'description' => 'Works on assigned clients: creates content, projects and files, and downloads documents.', 'permissions' => ['content.edit', 'documents.export', 'reports.manage'], 'is_system' => true],
             ['name' => 'Viewer', 'description' => 'Can look at everything and leave comments, but not change anything.', 'permissions' => [], 'is_system' => true],
         ];
     }
