@@ -11,16 +11,17 @@
   $pendingHere = $account ? Post::where('account_id', $account->id)->where('status', 'pending')->count() : 0;
   $pendingAll = $staff ? Post::whereIn('account_id', $workspaces->pluck('id'))->where('status', 'pending')->count() : 0;
   $base = $account ? '/portal/c/'.$account->id : null;
-  $sub = (preg_match('#^portal/c/\d+/(calendar|projects|files|invoices|reports|content)#', $path, $m) ? $m[1] : (str_starts_with($path, 'portal/posts') || str_starts_with($path, 'r/') ? 'content' : ''));
+  $sub = (preg_match('#^portal/c/\d+/(calendar|projects|files|invoices|reports|content)#', $path, $m) ? $m[1] : (str_starts_with($path, 'portal/projects/') ? 'projects' : (str_starts_with($path, 'portal/posts') || str_starts_with($path, 'r/') ? 'content' : '')));
   $accNav = $account ? [
     [$base, 'Client Dashboard', 'home', $path === 'portal/c/'.$account->id, null],
     [$base.'/content', 'Content Review', 'photo', str_contains($path, '/content') || str_starts_with($path, 'portal/posts') || str_starts_with($path, 'r/'), $pendingHere ?: null],
     [$base.'/calendar', 'Content Calendar', 'cal', str_ends_with($path, '/calendar'), null],
-    [$base.'/projects', 'Projects & Tasks', 'tasks', str_ends_with($path, '/projects'), null],
+    [$base.'/projects', 'Projects & Tasks', 'tasks', str_ends_with($path, '/projects') || str_starts_with($path, 'portal/projects/'), null],
     [$base.'/files', 'Files & Assets', 'folder', str_ends_with($path, '/files'), null],
     [$base.'/invoices', 'Payments & Invoices', 'receipt', str_ends_with($path, '/invoices'), null],
     [$base.'/reports', 'Performance Reports', 'chart', str_ends_with($path, '/reports'), null],
   ] : [];
+  if ($account && ! $staff) { array_splice($accNav, 1, 0, [[$base.'/board', 'Campaign Board', 'board', false, null]]); }
   if ($account && $staff) { $accNav[0][0] = '/board?ws='.$account->id; $accNav[0][3] = false; }
 @endphp
 <!doctype html>
@@ -34,8 +35,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
 <link rel="stylesheet" href="/css/board.css?v={{ filemtime(public_path('css/board.css')) }}">
 <link rel="stylesheet" href="/css/portal.css?v={{ filemtime(public_path('css/portal.css')) }}">
+<link rel="stylesheet" href="/css/portal2.css?v={{ filemtime(public_path('css/portal2.css')) }}">
 <style>:root{--accent:{{ $agency?->brand_color ?? '#7c3aed' }}}</style>
 </head>
 <body>
@@ -105,9 +108,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.14.5/sweetalert2.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <script src="/js/ui.js?v={{ filemtime(public_path('js/ui.js')) }}"></script>
 <script src="/js/admin.js?v={{ filemtime(public_path('js/admin.js')) }}"></script>
 <script src="/js/portal.js?v={{ filemtime(public_path('js/portal.js')) }}"></script>
+<script src="/js/portal2.js?v={{ filemtime(public_path('js/portal2.js')) }}"></script>
 @stack('scripts')
 </body>
 </html>

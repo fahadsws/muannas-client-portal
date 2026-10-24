@@ -90,8 +90,8 @@ textarea.iv-in.det{height:auto;min-height:64px;max-height:220px;padding:7px 6px;
 
   <div class="pn">
     <h3>Terms, notes and PDF</h3>
-    <div class="fld"><label>Payment terms</label><textarea name="terms" maxlength="3000" style="min-height:80px">{{ $v('terms') }}</textarea></div>
-    <div class="fld"><label>Notes</label><textarea name="notes" maxlength="3000" style="min-height:70px">{{ $v('notes') }}</textarea></div>
+    <div class="fld"><label>Payment terms</label><x-rte name="terms" :value="$v('terms')" /></div>
+    <div class="fld"><label>Notes</label><x-rte name="notes" :value="$v('notes')" /></div>
     <div class="fld"><x-file-input name="file" accept="application/pdf" label="Your own PDF (optional)" remove-name="remove_file"
         :current="(! $isNew && $invoice->file_path) ? ['name' => 'Invoice-'.$invoice->number.'.pdf', 'size' => 'Uploaded PDF', 'url' => '/portal/invoices/'.$invoice->id.'/pdf?view=1'] : null"
         hint="If you attach one, it replaces the generated PDF for download and email. The on-screen invoice stays as designed." /></div>

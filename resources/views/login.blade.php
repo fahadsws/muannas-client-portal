@@ -136,7 +136,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);-webkit-font-smoo
 </div>
 <script>
 const $=s=>document.querySelector(s), f=$('#f'), go=$('#go'), bar=$('#bar');
-$('#eye').onclick=()=>{const p=$('#p');p.type=p.type==='password'?'text':'password'};
+$('#eye').onclick=()=>{const p=$('#p'),b=$('#eye'),show=p.type==='password';p.type=show?'text':'password';b.setAttribute('aria-label',show?'Hide password':'Show password');b.innerHTML=show?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.3A10.8 10.8 0 0112 5c6.4 0 10 7 10 7a18.2 18.2 0 01-3.1 3.9M6.1 6.1C3.5 8.1 2 12 2 12s3.6 7 10 7a10.8 10.8 0 003-.4"/><path d="M14.1 18.7A10.8 10.8 0 0112 19C5.6 19 2 12 2 12s.6-1.2 1.7-2.7"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'};
 f.addEventListener('submit',e=>{
   if(f.dataset.sent) return;
   if(!f.checkValidity()){ e.preventDefault(); f.reportValidity(); return; }

@@ -1309,6 +1309,27 @@ body{color:var(--ink)}
 .kpis .kpi:nth-child(4) .dot.done{background:#fff}
 .kpi.k-pending,.kpi.k-approved,.kpi.k-progress,.kpi.k-published{border-left-width:1px}
 
+/* Keep the two middle summary cards in the Atelo palette as well.  The
+   dashboard has four cards in both agency and admin views, so these shared
+   rules keep their treatment consistent instead of leaving cards 2 and 3
+   with the old neutral backgrounds. */
+.kpis .kpi:nth-child(2),.kpis .kpi:nth-child(3){color:#fff;border-color:transparent}
+.kpis .kpi:nth-child(2){background:linear-gradient(135deg,#818cf8 0%,#4f46e5 100%)}
+.kpis .kpi:nth-child(3){background:linear-gradient(135deg,#a78bfa 0%,#6d28d9 100%)}
+.kpis .kpi:nth-child(2) small,.kpis .kpi:nth-child(2) .sub,
+.kpis .kpi:nth-child(3) small,.kpis .kpi:nth-child(3) .sub{color:rgba(255,255,255,.84)}
+.kpis .kpi:nth-child(2) b,.kpis .kpi:nth-child(3) b{color:#fff}
+.kpis .kpi:nth-child(2) .meter,.kpis .kpi:nth-child(3) .meter{background:rgba(255,255,255,.25)}
+.kpis .kpi:nth-child(2) .meter i,.kpis .kpi:nth-child(3) .meter i{background:#fff}
+.kpis .kpi:nth-child(2) .dot,.kpis .kpi:nth-child(3) .dot{background:rgba(255,255,255,.9)}
+
+/* Client portal KPI links use the same four-card Atelo sequence. */
+.kpis a.kpi:nth-child(3){background:linear-gradient(135deg,#a78bfa 0%,#6d28d9 100%);color:#fff;border-color:transparent}
+.kpis a.kpi:nth-child(3) small,.kpis a.kpi:nth-child(3) .sub{color:rgba(255,255,255,.84)}
+.kpis a.kpi:nth-child(3) b{color:#fff}
+.kpis a.kpi:nth-child(3) .meter{background:rgba(255,255,255,.25)}
+.kpis a.kpi:nth-child(3) .meter i{background:#fff}
+
 /* charts */
 .chartrow{display:grid;grid-template-columns:1fr 1.7fr;gap:16px;margin:0 0 22px}
 .chartcard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px}
@@ -1326,3 +1347,15 @@ body{color:var(--ink)}
 .s-draft{background:#cbd0ee}.s-pending{background:#f59e0b}.s-changes{background:#ff9b6a}.s-approved{background:#8b8bfa}.s-published{background:#4f46e5}
 .cols .bar1{background:linear-gradient(180deg,#8b8bfa,#4f46e5)}
 @media(max-width:900px){.chartrow{grid-template-columns:1fr}}
+
+/* mobile hardening: charts and grid children may shrink instead of pushing the page wider */
+.chartrow{grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)}
+.chartrow>*,.grid>*,.kpis>*,.pcards>*{min-width:0}
+@media(max-width:900px){.chartrow{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){
+  .cols{gap:6px;height:130px}.chartcard{padding:14px}
+  .cols .c span{font-size:10px;margin-top:6px}
+  #bar .wordmark,#bar .search span{display:none}
+  #bar{gap:6px}
+}
+.fld{position:relative}

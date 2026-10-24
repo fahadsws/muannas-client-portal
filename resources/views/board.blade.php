@@ -43,7 +43,7 @@
 <script>
 window.BOARD = {
   mode: @json($mode), token: @json($token), accounts: @json($accounts), me: @json($me), agency: @json($agency),
-  brand: @json(config('board.brand')), csrf: @json(csrf_token())
+  back: @json($back ?? null), brand: @json(config('board.brand')), csrf: @json(csrf_token())
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

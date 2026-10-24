@@ -28,8 +28,9 @@
         </div>
         <details>
           <summary class="btn warn block" style="list-style:none">Request Changes</summary>
-          <form method="post" action="/portal/posts/{{ $post->id }}/changes" style="margin-top:12px">@csrf
+          <form method="post" enctype="multipart/form-data" action="/portal/posts/{{ $post->id }}/changes" style="margin-top:12px">@csrf
             <div class="fld"><label for="why">What should we change?</label><textarea id="why" name="body" required maxlength="2000" placeholder="e.g. Use the second photo and shorten the caption"></textarea></div>
+            <div class="fld"><label>Reference image (optional)</label><x-image-input name="image" label="Add a reference image" hint="Show us what you mean · PNG, JPG or WEBP" /></div>
             <button class="btn warn">Send feedback</button>
           </form>
         </details>
@@ -73,12 +74,14 @@
         <div class="cmt">
           <div class="h"><b>{{ $c->author }}</b><span class="tag {{ $c->role }}">{{ $c->role === 'client' ? 'Client' : 'Muannas' }}</span><small>{{ $c->created_at->format('j M, g:i A') }}</small></div>
           <div class="caption">{{ $c->body }}</div>
+          @if($c->image)<a href="/portal/comments/{{ $c->id }}/image" target="_blank" rel="noopener"><img src="/portal/comments/{{ $c->id }}/image" alt="Reference image" style="margin-top:8px;max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border)"></a>@endif
         </div>
       @empty
         <p class="mute" style="margin:0 0 8px">No comments yet.</p>
       @endforelse
-      <form method="post" action="/portal/posts/{{ $post->id }}/comments" style="margin-top:14px">@csrf
+      <form method="post" enctype="multipart/form-data" action="/portal/posts/{{ $post->id }}/comments" style="margin-top:14px">@csrf
         <div class="fld"><textarea name="body" required maxlength="2000" placeholder="Write a comment…" style="min-height:76px"></textarea></div>
+        <div class="fld"><x-image-input name="image" label="Attach an image (optional)" hint="PNG, JPG or WEBP" /></div>
         <button class="btn sm primary">Post comment</button>
       </form>
     </div>

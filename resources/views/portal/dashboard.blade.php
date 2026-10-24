@@ -35,11 +35,12 @@
 </div>
 
 {{-- summary counts --}}
+@php $kt = max(1, $summary['pending'] + $summary['approved'] + $summary['progress'] + $summary['published']); $kp = fn ($n) => round($n / $kt * 100); @endphp
 <div class="kpis">
-  <a class="kpi k-pending" href="{{ $base }}/content?status=pending"><small>Pending approvals</small><b>{{ $summary['pending'] }}</b><div class="sub">Waiting for you</div></a>
-  <a class="kpi k-approved" href="{{ $base }}/content?status=approved"><small>Approved</small><b>{{ $summary['approved'] }}</b><div class="sub">Signed off, ready to go</div></a>
-  <a class="kpi k-progress" href="{{ $base }}/content?status=changes"><small>In progress</small><b>{{ $summary['progress'] }}</b><div class="sub">Our team is working on it</div></a>
-  <a class="kpi k-published" href="{{ $base }}/content?status=published"><small>Published</small><b>{{ $summary['published'] }}</b><div class="sub">Live on your channels</div></a>
+  <a class="kpi k-pending" href="{{ $base }}/content?status=pending"><small>Pending approvals</small><b>{{ $summary['pending'] }}</b><div class="sub">Waiting for you</div><div class="meter"><i style="width:{{ $kp($summary['pending']) }}%"></i></div></a>
+  <a class="kpi k-approved" href="{{ $base }}/content?status=approved"><small>Approved</small><b>{{ $summary['approved'] }}</b><div class="sub">Signed off, ready to go</div><div class="meter"><i class="g" style="width:{{ $kp($summary['approved']) }}%"></i></div></a>
+  <a class="kpi k-progress" href="{{ $base }}/content?status=changes"><small>In progress</small><b>{{ $summary['progress'] }}</b><div class="sub">Our team is working on it</div><div class="meter"><i class="m" style="width:{{ $kp($summary['progress']) }}%"></i></div></a>
+  <a class="kpi k-published" href="{{ $base }}/content?status=published"><small>Published</small><b>{{ $summary['published'] }}</b><div class="sub">Live on your channels</div><div class="meter"><i class="p" style="width:{{ $kp($summary['published']) }}%"></i></div></a>
 </div>
 
 @if($pipeline->sum() > 0)

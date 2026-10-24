@@ -46,6 +46,47 @@ class Ui
         'board' => '<rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/>',
     ];
 
+    /** Clean rich text from the editor: keep basic formatting, drop attributes except safe links. Older plain text keeps its line breaks. */
+    public static function clean(?string $html): string
+    {
+        $html = trim((string) $html);
+        if ($html === '') {
+            return '';
+        }
+        if (! preg_match('/<\/?[a-z][^>]*>/i', $html)) {
+            return nl2br(e($html));
+        }
+        $html = strip_tags($html, '<p><br><b><strong><i><em><u><ul><ol><li><a><h3><h4>');
+
+        return preg_replace_callback('/<(\/?)([a-z0-9]+)([^>]*)>/i', function ($m) {
+            [, $close, $tag, $attrs] = $m;
+            if ($close || strtolower($tag) !== 'a') {
+                return '<'.$close.strtolower($tag).'>';
+            }
+            if (preg_match('/href\s*=\s*"(https?:\/\/[^"\s]+|mailto:[^"\s]+)"/i', $attrs, $h)) {
+                return '<a href="'.e(html_entity_decode($h[1])).'" target="_blank" rel="noopener noreferrer">';
+            }
+
+            return '<a>';
+        }, $html);
+    }
+
+    /** Label and colours for a file type badge. */
+    public static function fileKind(string $name): array
+    {
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'pdf' => ['PDF', '#dc2626', '#fee2e2'],
+            'doc', 'docx' => ['DOC', '#2563eb', '#dbeafe'],
+            'xls', 'xlsx', 'csv' => ['XLS', '#16a34a', '#dcfce7'],
+            'ppt', 'pptx' => ['PPT', '#ea580c', '#ffedd5'],
+            'zip' => ['ZIP', '#7c3aed', '#ede9fe'],
+            'mp3', 'wav' => ['AUDIO', '#0891b2', '#cffafe'],
+            default => [strtoupper($ext) ?: 'FILE', '#475569', '#e2e8f0'],
+        };
+    }
+
     public static function icon(string $name): string
     {
         return '<svg class="i" viewBox="0 0 24 24">'.(self::ICONS[$name] ?? '').'</svg>';

@@ -169,16 +169,40 @@ class InvoiceController extends PortalController
     public function markPaid(Request $r, Invoice $invoice)
     {
         $this->manage($r, $invoice->account, 'billing.manage');
-        $v = $r->validate(['paid_on' => 'nullable|date', 'payment_method' => ['nullable', Rule::in(array_keys(Invoice::METHODS))], 'payment_ref' => 'nullable|string|max:120']);
-        $invoice->update(['paid_on' => $v['paid_on'] ?? now()->toDateString(), 'payment_method' => $v['payment_method'] ?? null, 'payment_ref' => $v['payment_ref'] ?? null, 'draft' => false, 'sent_at' => $invoice->sent_at ?? now()]);
+        $v = $r->validate(['paid_on' => 'nullable|date', 'paid_amount' => 'nullable|numeric|min:0|max:99999999', 'payment_method' => ['nullable', Rule::in(array_keys(Invoice::METHODS))], 'payment_ref' => 'nullable|string|max:120']);
+        $invoice->update(['paid_on' => $v['paid_on'] ?? now()->toDateString(), 'paid_amount' => $v['paid_amount'] ?? $invoice->amount, 'payment_method' => $v['payment_method'] ?? null, 'payment_ref' => $v['payment_ref'] ?? null, 'draft' => false, 'sent_at' => $invoice->sent_at ?? now()]);
 
-        return back()->with('ok', 'Marked as paid');
+        return back()->with('ok', 'Receipt recorded');
+    }
+
+    /** Mark several invoices received in full, or delete several, in one go. */
+    public function bulk(Request $r, Account $account)
+    {
+        $this->manage($r, $account, 'billing.manage');
+        $v = $r->validate(['bulk' => ['required', Rule::in(['paid', 'delete'])], 'ids' => 'required|array|min:1|max:100', 'ids.*' => 'integer'], ['ids.required' => 'Select at least one invoice.']);
+        $invoices = $account->invoices()->whereIn('id', $v['ids'])->get();
+        $n = 0;
+        foreach ($invoices as $i) {
+            if ($v['bulk'] === 'paid' && ! $i->paid_on) {
+                $i->update(['paid_on' => now()->toDateString(), 'paid_amount' => $i->amount, 'draft' => false, 'sent_at' => $i->sent_at ?? now()]);
+                $n++;
+            } elseif ($v['bulk'] === 'delete' && $i->editable()) {
+                if ($i->file_path) {
+                    Storage::disk('local')->delete($i->file_path);
+                }
+                $i->delete();
+                $n++;
+            }
+        }
+        $skipped = $invoices->count() - $n;
+
+        return back()->with('ok', $n.' '.\Illuminate\Support\Str::plural('invoice', $n).($v['bulk'] === 'paid' ? ' marked as received' : ' deleted').($skipped ? ' · '.$skipped.' skipped' : ''));
     }
 
     public function markUnpaid(Request $r, Invoice $invoice)
     {
         $this->manage($r, $invoice->account, 'billing.manage');
-        $invoice->update(['paid_on' => null, 'payment_method' => null, 'payment_ref' => null, 'reminded_before_at' => null, 'reminded_overdue_at' => null]);
+        $invoice->update(['paid_on' => null, 'paid_amount' => null, 'payment_method' => null, 'payment_ref' => null, 'reminded_before_at' => null, 'reminded_overdue_at' => null]);
 
         return back()->with('ok', 'Marked as unpaid');
     }
@@ -247,7 +271,7 @@ class InvoiceController extends PortalController
             'items.*.discount_type' => ['nullable', Rule::in(['percent', 'fixed'])], 'items.*.discount_value' => 'nullable|numeric|min:0|max:99999999',
             'items.*.taxes' => 'nullable|array|max:10', 'items.*.taxes.*.name' => 'required|string|max:60', 'items.*.taxes.*.rate' => 'required|numeric|min:0|max:100',
             'discount_type' => ['required', Rule::in(['fixed', 'percent'])], 'discount_value' => 'nullable|numeric|min:0|max:99999999',
-            'terms' => 'nullable|string|max:3000', 'notes' => 'nullable|string|max:3000',
+            'terms' => 'nullable|string|max:10000', 'notes' => 'nullable|string|max:10000',
             'file' => 'nullable|file|mimes:pdf|max:'.config('portal.max_file_kb'),
         ], ['items.required' => 'Add at least one line item.', 'items.min' => 'Add at least one line item.']);
     }
@@ -257,7 +281,7 @@ class InvoiceController extends PortalController
         return [
             'title' => $v['title'] ?? null, 'project_id' => $v['project_id'] ?? null, 'issued_on' => $v['issued_on'], 'due_on' => $v['due_on'],
             'discount_type' => $v['discount_type'], 'discount_value' => $v['discount_value'] ?? 0,
-            'terms' => $v['terms'] ?? null, 'notes' => $v['notes'] ?? null,
+            'terms' => \App\Support\Ui::clean($v['terms'] ?? null) ?: null, 'notes' => \App\Support\Ui::clean($v['notes'] ?? null) ?: null,
         ];
     }
 }

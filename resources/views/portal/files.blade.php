@@ -8,6 +8,8 @@
     @if($canUpload)<button type="button" class="btn primary" data-modal="uploadFiles">{!! Ui::icon('upload') !!}Upload files</button>@endif
   </div></div>
 
+<div class="gsearch">{!! Ui::icon('search') !!}<input type="search" id="gsearch" data-url="{{ $base }}/files-search" placeholder="Search all files by name…" autocomplete="off"><div class="gres" id="gres" hidden></div></div>
+
 @if($canUpload)
 <x-modal id="uploadFiles" title="Upload files">
 <form method="post" enctype="multipart/form-data" action="{{ $base }}/files">@csrf

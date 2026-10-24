@@ -50,10 +50,33 @@ class FileController extends PortalController
         $this->reach($r, $account);
         [$label, $custom] = $this->folder($account, $folder);
         $team = $this->isTeam($r, $account);
-        $files = $account->files()->where('folder', $folder)->paginate(self::PER_PAGE)->withQueryString();
+        $q = trim((string) $r->query('q', ''));
+        $files = $account->files()->where('folder', $folder)
+            ->when($q !== '', fn ($x) => $x->where('name', 'like', '%'.addcslashes($q, '%_\\').'%'))
+            ->latest('id')->paginate(self::PER_PAGE)->withQueryString();
         $canUpload = $folder !== 'reports' && ($team || ($folder === 'client' && $r->user()->isClient()));
 
-        return view('portal.files-folder', ['account' => $account, 'key' => $folder, 'label' => $label, 'custom' => $custom, 'files' => $files, 'staff' => $team, 'canUpload' => $canUpload]);
+        return view('portal.files-folder', ['account' => $account, 'key' => $folder, 'label' => $label, 'custom' => $custom, 'files' => $files, 'staff' => $team, 'canUpload' => $canUpload, 'q' => $q]);
+    }
+
+    /** Search every folder of this client by file name (live dropdown on Files & Assets). */
+    public function search(Request $r, Account $account)
+    {
+        $this->reach($r, $account);
+        $q = trim((string) $r->query('q', ''));
+        if ($q === '') {
+            return response()->json([]);
+        }
+        $custom = $account->fileFolders()->get()->mapWithKeys(fn ($f) => [$f->key() => $f->name]);
+        $rows = $account->files()->where('name', 'like', '%'.addcslashes($q, '%_\\').'%')->latest('id')->limit(15)->get()->map(function ($f) use ($custom) {
+            [$kind, $fg, $bg] = \App\Support\Ui::fileKind($f->name);
+            $folder = ClientFile::FOLDERS[$f->folder] ?? ($custom[$f->folder] ?? $f->folder);
+
+            return ['name' => $f->name, 'path' => 'Files & Assets / '.$folder.' / '.$f->name, 'kind' => $kind, 'fg' => $fg, 'bg' => $bg,
+                'url' => '/portal/files/'.$f->id, 'open' => '/portal/files/'.$f->id.'?view=1'];
+        });
+
+        return response()->json($rows);
     }
 
     public function store(Request $r, Account $account)

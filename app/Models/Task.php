@@ -17,6 +17,11 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
     public function overdue(): bool
     {
         return $this->status !== 'done' && $this->due_on && $this->due_on->isBefore(today());

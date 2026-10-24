@@ -103,7 +103,10 @@ class PortalTest extends TestCase
         $this->post('/portal/posts/'.$theirs->id.'/approve')->assertForbidden();
         $this->post('/portal/posts/'.$theirs->id.'/comments', ['body' => 'hi'])->assertForbidden();
         $this->get('/portal/posts/'.$mine->id)->assertOk();
-        $this->get('/api/accounts/'.$this->noor->id)->assertForbidden(); // internal planning board API stays closed to clients
+        $this->get('/api/accounts/'.$this->atlas->id)->assertForbidden(); // another client's board stays closed
+        $this->get('/api/accounts/'.$this->noor->id)->assertOk(); // a client can open the campaign board of their own workspace
+        $this->get('/portal/c/'.$this->atlas->id.'/board')->assertForbidden();
+        $this->get('/portal/c/'.$this->noor->id.'/board')->assertOk();
     }
 
     public function test_team_member_only_sees_assigned_clients_but_admin_sees_all(): void
