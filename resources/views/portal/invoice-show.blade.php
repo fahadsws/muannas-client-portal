@@ -15,14 +15,14 @@
   <div class="prow">
     <a class="btn" href="/portal/invoices/{{ $i->id }}/pdf?view=1" target="_blank">{!! Ui::icon('eye') !!}PDF</a>
     <a class="btn" href="/portal/invoices/{{ $i->id }}/pdf">{!! Ui::icon('dl') !!}Download</a>
-    <button type="button" class="btn" onclick="window.print()">{!! Ui::icon('doc') !!}Print</button>
+    <a class="btn" href="/portal/invoices/{{ $i->id }}/pdf?view=1&print=1" target="_blank" rel="noopener">{!! Ui::icon('doc') !!}Print</a>
     @if($manage)
       <button type="button" class="btn" data-modal="sendInvoice">{!! Ui::icon('inbox') !!}Email invoice</button>
       @if($i->editable())<a class="btn" href="/portal/invoices/{{ $i->id }}/edit">{!! Ui::icon('edit') !!}Edit</a>@endif
       @if($locked)
         <form method="post" action="/portal/invoices/{{ $i->id }}/unpaid" data-confirm="Mark this invoice as unpaid? You can then edit or delete it." style="margin:0">@csrf<button class="btn">Mark unpaid</button></form>
       @else
-        <button type="button" class="btn primary" data-modal="payInvoice">{!! Ui::icon('check') !!}Mark paid</button>
+        <button type="button" class="btn primary" data-modal="payInvoice">{!! Ui::icon('check') !!}Mark receipt</button>
       @endif
     @endif
   </div></div>
@@ -59,12 +59,13 @@
   </x-modal>
 
   @unless($locked)
-  <x-modal id="payInvoice" title="Mark {{ $i->number }} as paid">
+  <x-modal id="payInvoice" title="Mark receipt · {{ $i->number }}">
     <form method="post" action="/portal/invoices/{{ $i->id }}/paid">@csrf
       <div class="two"><div class="fld"><label>Payment date</label><input type="date" name="paid_on" value="{{ now()->toDateString() }}" required></div>
-        <div class="fld"><label>Method</label><select name="payment_method"><option value="">—</option>@foreach(Invoice::METHODS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div></div>
+        <div class="fld"><label>Amount received ({{ $i->currency }})</label><input type="text" inputmode="decimal" name="paid_amount" value="{{ number_format((float) $i->amount, 2, '.', '') }}" required></div></div>
+      <div class="fld"><label>Method</label><select name="payment_method"><option value="">—</option>@foreach(Invoice::METHODS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
       <div class="fld"><label>Reference (optional)</label><input name="payment_ref" maxlength="120" placeholder="Transfer ID, cheque number…"></div>
-      <button class="btn primary">Mark as paid</button>
+      <button class="btn primary">Mark receipt</button>
     </form>
   </x-modal>
   @endunless

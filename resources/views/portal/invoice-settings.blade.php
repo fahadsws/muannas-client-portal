@@ -35,14 +35,27 @@
 
     <div class="pn">
       <h3>Default terms and notes</h3>
-      <div class="fld"><label>Payment terms</label><textarea name="terms" maxlength="3000" style="min-height:90px">{{ $v('terms') }}</textarea></div>
-      <div class="fld"><label>Notes</label><textarea name="notes" maxlength="3000" style="min-height:70px">{{ $v('notes') }}</textarea></div>
+      <div class="fld"><label>Payment terms</label><x-rte name="terms" :value="$v('terms')" :height="130" /></div>
+      <div class="fld"><label>Notes</label><x-rte name="notes" :value="$v('notes')" :height="110" /></div>
       <div class="fld"><label>Line added to every invoice email (optional)</label><textarea name="email_message" maxlength="1000" style="min-height:60px">{{ $v('email_message') }}</textarea></div>
-      <div class="hint">You can still change terms and notes on each invoice.</div>
+      <div class="hint" style="margin-bottom:14px">You can still change terms and notes on each invoice.</div>
+      <button class="btn primary">Save invoice settings</button>
     </div>
   </div>
 
   <div class="stack">
+    <div class="pn">
+      <h3>Invoice template</h3>
+      <p class="hint" style="margin:0 0 12px">How invoices look on screen, in print, in the PDF and in the email. Click a preview to zoom.</p>
+      <div class="tplgrid">
+        @foreach(['classic' => 'Classic', 'modern' => 'Modern'] as $key => $tn)
+          <div class="tplcard">
+            <button type="button" class="tplthumb" data-zoom="{{ $key }}" data-title="{{ $tn }}" title="Click to zoom"><iframe src="/portal/invoice-settings/preview/{{ $key }}" tabindex="-1" loading="lazy" title="{{ $tn }} preview"></iframe><span class="tplhint">{!! Ui::icon('eye') !!}Click to zoom</span></button>
+            <label class="tplfoot"><input type="radio" name="template" value="{{ $key }}" @checked(old('template', $cfg['template']) === $key)><span class="tplck">{!! Ui::icon('check') !!}</span><b>{{ $tn }}</b><span class="tplset">SET</span></label>
+          </div>
+        @endforeach
+      </div>
+    </div>
     <div class="pn">
       <h3>Column names</h3>
       <p class="hint" style="margin-top:0">What each column is called on the invoice form, the page, the PDF and the email. For example “Hours” instead of “Qty”.</p>
@@ -55,7 +68,6 @@
       <div class="fld"><label>Payment due after (days)</label><input type="text" inputmode="numeric" name="due_days" value="{{ $v('due_days') }}"><div class="hint">The due date is filled in as the issue date plus this many days.</div></div>
       <p class="hint">Reminder emails are automatic: {{ config('portal.invoice_reminder_days') }} days before the due date, then every {{ config('portal.overdue_repeat_days') }} days while overdue.</p>
     </div>
-    <button class="btn primary">Save invoice settings</button>
   </div>
 </form>
 @else
@@ -100,6 +112,10 @@
 </x-modal>
 @endif
 
+<x-modal id="tplZoom" title="Template preview" :wide="true">
+  <div class="zbar"><button type="button" class="btn sm" data-z="-">−</button><input type="range" id="zrange" min="40" max="150" value="80"><button type="button" class="btn sm" data-z="+">+</button><b id="zval">80%</b><button type="button" class="btn sm" data-z="fit">Fit</button></div>
+  <div class="zbox" id="zbox"><div class="zin" id="zin"><iframe id="zframe" src="about:blank" title="Preview"></iframe></div></div>
+</x-modal>
 @push('scripts')
 <script>
 (function () {

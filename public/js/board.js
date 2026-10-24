@@ -147,7 +147,7 @@
     const nn = S.data ? (S.data.notes_total ?? S.data.notes.length) : 0;
     const board = S.page === 'board' && acct();
     $('#bar').innerHTML = `<button class="ibtn burger" data-a="burger">${ic('menu')}</button>
-      ${CLIENT ? `<span class="logo" style="margin-right:6px">${MARK}<span class="wordmark">${esc(AG.name)}</span></span>` : ''}
+      ${CLIENT ? `${B.back ? `<a class="btn" href="${esc(B.back)}" style="margin-right:8px;text-decoration:none">${ic('arrow')}Portal</a>` : ''}<span class="logo" style="margin-right:6px">${acct() && acct().logo ? mark(acct().name, acct().logo) : MARK}<span class="wordmark">${esc(acct() && acct().logo ? acct().name : AG.name)}</span></span>` : ''}
       <div class="crumb hide-s">${CLIENT ? '' : `<span>${esc(AG.name)}</span><span class="sep">/</span>`}${S.page === 'board' ? `<span>${esc(acct() ? acct().name : 'Workspaces')}</span>${t ? `<span class="sep">/</span><b>${esc(t.label)}</b>` : ''}` : `<b>${PAGE_NAME[S.page]}</b>`}</div>
       <div class="spacer"></div>
       ${acct() ? `<button class="search" data-a="cmd">${ic('search')}<span>Search or jump to…</span><span class="kbd">Ctrl K</span></button>` : ''}

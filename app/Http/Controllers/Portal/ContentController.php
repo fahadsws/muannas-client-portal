@@ -57,6 +57,14 @@ class ContentController extends PortalController
         return $this->stream($post->media[$i]);
     }
 
+    public function commentImage(Request $r, \App\Models\PostComment $comment)
+    {
+        $this->post($r, $comment->post);
+        abort_unless($comment->image, 404);
+
+        return $this->stream($comment->image);
+    }
+
     // ── create / edit (team) ─────────────────────────────────
 
     public function create(Request $r, Account $account)
@@ -135,7 +143,7 @@ class ContentController extends PortalController
     public function comment(Request $r, Post $post)
     {
         $this->post($r, $post, 'comment');
-        $v = $r->validate(['body' => 'required|string|max:2000']);
+        $v = $r->validate(['body' => 'required|string|max:2000', 'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb')]);
         $this->addComment($post, $r, $v['body']);
         if (! $this->isStaff($r)) {
             Notify::clientActed($post, $r->user(), 'commented', $v['body']);
@@ -162,7 +170,7 @@ class ContentController extends PortalController
         $this->post($r, $post, 'comment');
         abort_unless($this->canAct($r, $post->account), 403, 'Only the client can request changes.');
         abort_unless($post->status === 'pending', 422, 'This post is not waiting for approval.');
-        $v = $r->validate(['body' => 'required|string|max:2000'], ['body.required' => 'Please tell us what to change.']);
+        $v = $r->validate(['body' => 'required|string|max:2000', 'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb')], ['body.required' => 'Please tell us what to change.']);
         DB::transaction(function () use ($post, $r, $v) {
             $this->addComment($post, $r, $v['body']);
             $this->move($post, $r, 'changes', 'changes_requested');
@@ -389,6 +397,7 @@ class ContentController extends PortalController
     {
         return $post->comments()->create([
             'user_id' => $r->user()->id, 'author' => $r->user()->name, 'role' => $this->isStaff($r) ? 'team' : 'client', 'body' => $body,
+            'image' => $r->hasFile('image') ? $r->file('image')->store('comments/'.$post->account_id, 'local') : null,
         ]);
     }
 

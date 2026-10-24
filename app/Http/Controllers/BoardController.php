@@ -42,12 +42,35 @@ class BoardController extends Controller
 
         return view('board', [
             'mode' => 'client', 'token' => $token,
-            'accounts' => collect([['id' => $a->id, 'name' => $a->name, 'perm' => $a->share_perm]]),
+            'accounts' => collect([['id' => $a->id, 'name' => $a->name, 'perm' => $a->share_perm, 'logo' => $a->logo ? url('/share/'.$token.'/logo').'?v='.$a->updated_at?->timestamp : null]]),
             'me' => ['name' => 'Guest', 'email' => '', 'role' => 'client', 'perms' => [], 'role_name' => 'Client', 'impersonating' => false],
             'agency' => ['id' => $a->agency->id, 'name' => $a->agency->name, 'color' => $a->agency->brand_color],
         ]);
     }
 
+    /** The shared board's logo, served without a login (only while the share link is on). */
+    public function shareLogo(string $token)
+    {
+        $a = Account::where('token', $token)->where('share_enabled', true)->firstOrFail();
+        abort_unless($a->logo && \Illuminate\Support\Facades\Storage::disk('local')->exists($a->logo), 404);
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->response($a->logo, null, ['X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, max-age=3600']);
+    }
+
+    /** Campaign board for a signed-in client: same view as the share link, but through their own login. */
+    public function clientBoard(Request $r, Account $account)
+    {
+        $u = $r->user();
+        $perm = Access::need($r, $account, 'view', true);
+        abort_if($u->isStaff(), 404);
+
+        return view('board', [
+            'mode' => 'client', 'token' => null, 'back' => '/portal/c/'.$account->id,
+            'accounts' => collect([['id' => $account->id, 'name' => $account->name, 'perm' => $perm === 'edit' ? 'comment' : $perm, 'logo' => $account->logoUrl()]]),
+            'me' => ['name' => $u->name, 'email' => $u->email, 'role' => 'client', 'perms' => [], 'role_name' => 'Client', 'impersonating' => (bool) session('impersonator')],
+            'agency' => ['id' => $account->agency->id, 'name' => $account->agency->name, 'color' => $account->agency->brand_color],
+        ]);
+    }
     // ── helpers ──────────────────────────────────────────────
 
     private function payload(Account $a, string $perm): array

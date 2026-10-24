@@ -82,14 +82,14 @@ class ClientAdminController extends PortalController
     {
         $u = $this->perm($r, 'workspaces.create');
         $v = $r->validate([
-            'name' => 'required|string|max:80', 'billing_address' => 'nullable|string|max:500', 'tax_id' => 'nullable|string|max:60', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb'),
+            'name' => 'required|string|max:80', 'phone' => 'nullable|string|max:30', 'billing_address' => 'nullable|string|max:500', 'tax_id' => 'nullable|string|max:60', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb'),
             'currency' => ['required', Rule::in(array_keys(config('currencies')))], 'client_name' => 'required|string|max:80', 'client_email' => 'required|email|unique:users,email',
             'client_password' => 'nullable|string|min:8|max:60', 'team' => 'array', 'team.*' => 'integer',
         ]);
         abort_if(Account::where('agency_id', $u->agency_id)->count() >= $u->agency->max_workspaces, 422, 'Client limit reached ('.$u->agency->max_workspaces.'). Ask the platform admin to raise it.');
 
         $account = Account::create([
-            'agency_id' => $u->agency_id, 'name' => $v['name'], 'billing_address' => $v['billing_address'] ?? null, 'tax_id' => $v['tax_id'] ?? null, 'currency' => $v['currency'], 'token' => Str::random(24), 'share_enabled' => false, 'docs' => [],
+            'agency_id' => $u->agency_id, 'name' => $v['name'], 'phone' => $v['phone'] ?? null, 'billing_address' => $v['billing_address'] ?? null, 'tax_id' => $v['tax_id'] ?? null, 'currency' => $v['currency'], 'token' => Str::random(24), 'share_enabled' => false, 'docs' => [],
             'position' => (Account::where('agency_id', $u->agency_id)->max('position') ?? 0) + 1,
         ]);
         DemoData::blank($account);
@@ -119,10 +119,11 @@ class ClientAdminController extends PortalController
         $u = $this->perm($r, 'workspaces.edit');
         $this->reach($r, $account, 'edit');
         $v = $r->validate([
-            'name' => 'required|string|max:80', 'billing_address' => 'nullable|string|max:500', 'tax_id' => 'nullable|string|max:60', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb'),
+            'name' => 'required|string|max:80', 'phone' => 'nullable|string|max:30', 'billing_address' => 'nullable|string|max:500', 'tax_id' => 'nullable|string|max:60', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:'.config('portal.max_image_kb'),
             'currency' => ['nullable', Rule::in(array_keys(config('currencies')))], 'remove_logo' => 'nullable|boolean', 'team' => 'array', 'team.*' => 'integer',
         ]);
         $account->name = $v['name'];
+        $account->phone = $v['phone'] ?? null;
         $account->billing_address = $v['billing_address'] ?? null;
         $account->tax_id = $v['tax_id'] ?? null;
         // the billing currency is fixed once the first invoice exists

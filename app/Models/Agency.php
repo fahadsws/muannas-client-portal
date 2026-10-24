@@ -19,7 +19,7 @@ class Agency extends Model
     public static function invoiceDefaults(): array
     {
         return [
-            'prefix' => 'INV-', 'padding' => 4, 'next_number' => 1, 'due_days' => 14,
+            'template' => 'classic', 'prefix' => 'INV-', 'padding' => 4, 'next_number' => 1, 'due_days' => 14,
             'label_item' => 'Description', 'label_qty' => 'Qty', 'label_rate' => 'Rate', 'label_discount' => 'Disc', 'label_tax' => 'Tax', 'label_amount' => 'Amount',
             'business_name' => '', 'address' => '', 'tax_id' => '', 'email' => '', 'phone' => '', 'bank' => '',
             'terms' => 'Payment is due by the due date shown above. Please use the invoice number as the payment reference.',

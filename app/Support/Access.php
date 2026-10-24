@@ -35,11 +35,10 @@ class Access
 
                 return null;
             }
-            if ($portal) {
-                $pivot = $user->sharedAccounts()->where('accounts.id', $account->id)->first();
-                if ($pivot) {
-                    return $pivot->pivot->perm;
-                }
+            $pivot = $user->role === 'guest' ? $user->sharedAccounts()->where('accounts.id', $account->id)->first() : null;
+            if ($pivot) {
+                // the campaign board lets a client look and comment, never edit
+                return $portal ? $pivot->pivot->perm : ($pivot->pivot->perm === 'edit' ? 'comment' : $pivot->pivot->perm);
             }
         }
 

@@ -53,7 +53,7 @@
 @elseif($view === 'cards')
   <div class="agcards">
     @foreach($accounts as $a)
-      <a class="agc" href="/board?ws={{ $a->id }}" style="text-decoration:none;color:inherit"><div class="top">{!! Ui::mark($a->name, $a->logoUrl()) !!}<div><b>{{ $a->name }}</b><small>{{ $a->clientUsers->first()?->email ?? 'No client login' }}</small></div>
+      <a class="agc" href="/board?ws={{ $a->id }}" style="text-decoration:none;color:inherit"><div class="top">{!! Ui::mark($a->name, $a->logoUrl()) !!}<div><b>{{ $a->name }}</b><small>{{ $a->clientUsers->first()?->email ?? 'No client login' }}</small>@if($a->phone)<small>&#128222; {{ $a->phone }}</small>@endif</div>
         @if($a->pending_count)<span style="margin-left:auto" class="stag s-pending">{{ $a->pending_count }} pending</span>@endif</div>
         <div class="stats"><div><b>{{ $a->posts_count }}</b><small>Posts</small></div><div><b>{{ $a->team->count() }}</b><small>Team</small></div><div><b>{{ $a->clientUsers->count() }}</b><small>Logins</small></div></div>
         <div class="foot"><span>Updated {{ $ago($a) }}</span><span>Since {{ $a->created_at->format('M Y') }}</span></div></a>
@@ -61,12 +61,13 @@
   </div>
 @else
 <table class="tbl stack-m">
-  <thead><tr>{!! $th('name', 'Client') !!}<th>Client login</th><th>Muannas team</th>{!! $th('pending', 'Pending') !!}{!! $th('posts', 'Posts') !!}{!! $th('activity', 'Updated') !!}{!! $th('created', 'Added') !!}<th style="text-align:right">Actions</th></tr></thead>
+  <thead><tr>{!! $th('name', 'Client') !!}<th>Client login</th><th>Mobile</th><th>Muannas team</th>{!! $th('pending', 'Pending') !!}{!! $th('posts', 'Posts') !!}{!! $th('activity', 'Updated') !!}{!! $th('created', 'Added') !!}<th style="text-align:right">Actions</th></tr></thead>
   <tbody>
     @foreach($accounts as $a)
       <tr class="rowlink" data-row="/board?ws={{ $a->id }}">
         <td data-l="Client"><div class="who">{!! Ui::mark($a->name, $a->logoUrl()) !!}<div><b><a href="/board?ws={{ $a->id }}" style="text-decoration:none;color:inherit">{{ $a->name }}</a></b></div></div></td>
         <td data-l="Client login" class="cell2">@forelse($a->clientUsers->take(2) as $cu){{ $cu->name }}<small>{{ $cu->email }}</small>@empty<span style="color:var(--mute)">—</span>@endforelse</td>
+        <td data-l="Mobile">@if($a->phone)<a class="tel" href="tel:{{ preg_replace('/[^0-9+]/', '', $a->phone) }}" title="Call">&#128222; {{ $a->phone }}</a>@else<span style="color:var(--mute)">—</span>@endif</td>
         <td data-l="Muannas team">{{ $a->team->pluck('name')->take(3)->join(', ') ?: '—' }}@if($a->team->count() > 3) <small style="color:var(--mute)">+{{ $a->team->count() - 3 }}</small>@endif</td>
         <td data-l="Pending">@if($a->pending_count)<span class="stag s-pending">{{ $a->pending_count }}</span>@else<span style="color:var(--mute)">—</span>@endif</td>
         <td data-l="Posts">{{ $a->posts_count }}</td>

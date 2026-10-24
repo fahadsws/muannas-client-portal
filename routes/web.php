@@ -24,6 +24,7 @@ Route::post('/impersonate/stop', [Au::class, 'stopImpersonating'])->middleware('
 
 Route::get('/brand/{kind}', [\App\Http\Controllers\BrandController::class, 'show']);
 Route::get('/share/{token}', [B::class, 'share']);
+Route::get('/share/{token}/logo', [B::class, 'shareLogo']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/agency-logo/{agency}', [A::class, 'logo']);
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'portal'])->prefix('portal')->group(function () {
 
     Route::get('c/{account}', [P\DashboardController::class, 'show']);
     Route::get('c/{account}/logo', [P\DashboardController::class, 'logo'])->name('portal.logo');
+    Route::get('c/{account}/board', [B::class, 'clientBoard']);
     Route::get('c/{account}/calendar', [P\CalendarController::class, 'show']);
 
     Route::get('c/{account}/content', [P\ContentController::class, 'index']);
@@ -57,6 +59,7 @@ Route::middleware(['auth', 'portal'])->prefix('portal')->group(function () {
     Route::put('posts/{post}', [P\ContentController::class, 'update']);
     Route::delete('posts/{post}', [P\ContentController::class, 'destroy']);
     Route::get('posts/{post}/media/{i}', [P\ContentController::class, 'media'])->whereNumber('i')->name('portal.media');
+    Route::get('comments/{comment}/image', [P\ContentController::class, 'commentImage']);
     Route::post('posts/{post}/comments', [P\ContentController::class, 'comment'])->middleware('throttle:30,1');
     Route::post('posts/{post}/approve', [P\ContentController::class, 'approve']);
     Route::post('posts/{post}/changes', [P\ContentController::class, 'requestChanges']);
@@ -64,6 +67,7 @@ Route::middleware(['auth', 'portal'])->prefix('portal')->group(function () {
 
     Route::get('c/{account}/projects', [P\ProjectController::class, 'index']);
     Route::post('c/{account}/projects', [P\ProjectController::class, 'store']);
+    Route::get('projects/{project}', [P\ProjectController::class, 'show']);
     Route::put('projects/{project}', [P\ProjectController::class, 'update']);
     Route::delete('projects/{project}', [P\ProjectController::class, 'destroy']);
     Route::post('projects/{project}/tasks', [P\ProjectController::class, 'addTask']);
@@ -76,17 +80,20 @@ Route::middleware(['auth', 'portal'])->prefix('portal')->group(function () {
     Route::post('c/{account}/file-folders', [P\FileController::class, 'storeFolder']);
     Route::put('file-folders/{folder}', [P\FileController::class, 'updateFolder']);
     Route::delete('file-folders/{folder}', [P\FileController::class, 'destroyFolder']);
+    Route::get('c/{account}/files-search', [P\FileController::class, 'search']);
     Route::get('files/{file}', [P\FileController::class, 'download']);
     Route::delete('files/{file}', [P\FileController::class, 'destroy']);
 
     Route::get('invoice-settings', [P\InvoiceSettingsController::class, 'show']);
+    Route::get('invoice-settings/preview/{tpl}', [P\InvoiceSettingsController::class, 'preview']);
     Route::post('invoice-settings', [P\InvoiceSettingsController::class, 'save']);
     Route::post('invoice-taxes', [P\InvoiceSettingsController::class, 'storeTax']);
     Route::put('invoice-taxes/{tax}', [P\InvoiceSettingsController::class, 'updateTax']);
     Route::delete('invoice-taxes/{tax}', [P\InvoiceSettingsController::class, 'destroyTax']);
     Route::get('c/{account}/invoices', [P\InvoiceController::class, 'index']);
     Route::get('c/{account}/payments', [P\InvoiceController::class, 'payments']);
-    Route::get('c/{account}/invoices/new', [P\InvoiceController::class, 'create']);
+    Route::post('c/{account}/invoices/bulk', [P\InvoiceController::class, 'bulk']);
+    Route::get('c/{account}/invoices/new',[P\InvoiceController::class, 'create']);
     Route::post('c/{account}/invoices', [P\InvoiceController::class, 'store']);
     Route::get('invoices/{invoice}', [P\InvoiceController::class, 'show']);
     Route::get('invoices/{invoice}/edit', [P\InvoiceController::class, 'edit']);

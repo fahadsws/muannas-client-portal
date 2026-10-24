@@ -37,22 +37,34 @@ class InvoiceSettingsController extends PortalController
         ]);
     }
 
+    /** A full-size example invoice in one template; shown inside the preview cards and the zoom window. */
+    public function preview(Request $r, string $tpl)
+    {
+        abort_unless(in_array($tpl, ['classic', 'modern'], true), 404);
+
+        return view('portal.invoice-preview', \App\Support\InvoiceDoc::sample($this->agency($r), $tpl));
+    }
+
     public function save(Request $r)
     {
         $agency = $this->agency($r);
         $v = $r->validate([
+            'template' => ['nullable', \Illuminate\Validation\Rule::in(['classic', 'modern'])],
             'prefix' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-_\/{}.]*$/'], 'padding' => 'required|integer|min:1|max:10', 'next_number' => 'required|integer|min:1|max:99999999',
             'due_days' => 'required|integer|min:0|max:365',
             'label_item' => 'nullable|string|max:24', 'label_qty' => 'nullable|string|max:24', 'label_rate' => 'nullable|string|max:24',
             'label_discount' => 'nullable|string|max:24', 'label_tax' => 'nullable|string|max:24', 'label_amount' => 'nullable|string|max:24',
             'business_name' => 'nullable|string|max:120', 'address' => 'nullable|string|max:500', 'tax_id' => 'nullable|string|max:60', 'email' => 'nullable|email|max:120',
-            'phone' => 'nullable|string|max:40', 'bank' => 'nullable|string|max:800', 'terms' => 'nullable|string|max:3000', 'notes' => 'nullable|string|max:3000', 'email_message' => 'nullable|string|max:1000',
+            'phone' => 'nullable|string|max:40', 'bank' => 'nullable|string|max:800', 'terms' => 'nullable|string|max:10000', 'notes' => 'nullable|string|max:10000', 'email_message' => 'nullable|string|max:1000',
         ], ['prefix.regex' => 'The prefix can only use letters, numbers and - _ / . (and {YYYY} for the year).']);
         $defaults = Agency::invoiceDefaults();
         foreach (['label_item', 'label_qty', 'label_rate', 'label_discount', 'label_tax', 'label_amount'] as $k) {
             $v[$k] = trim((string) ($v[$k] ?? '')) ?: $defaults[$k];
         }
+        $v['template'] = $v['template'] ?? ($agency->invoiceSettings()['template'] ?? 'classic');
         $v['prefix'] = $v['prefix'] ?? '';
+        $v['terms'] = \App\Support\Ui::clean($v['terms'] ?? '');
+        $v['notes'] = \App\Support\Ui::clean($v['notes'] ?? '');
         foreach (['business_name', 'address', 'tax_id', 'email', 'phone', 'bank', 'terms', 'notes', 'email_message'] as $k) {
             $v[$k] = $v[$k] ?? '';
         }
